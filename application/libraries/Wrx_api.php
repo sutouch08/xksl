@@ -1,9 +1,7 @@
 <?php
 
 class Wrx_api
-{
-  private $url;
-  private $token;
+{  
   private $api;
   protected $ci;
   public $error;
@@ -34,9 +32,7 @@ class Wrx_api
     $url = $this->api['WRX_API_HOST'];
     $url .= "shopee/shipping-parameter?orderSN={$reference}";
     $api_path = $url;
-
-    $headers = array("Authorization:Bearer {$this->api['WRX_API_CREDENTIAL']}");
-    $apiUrl = str_replace(" ","%20",$url);
+    $headers = array("Authorization:Bearer {$this->api['WRX_API_CREDENTIAL']}");    
     $method = 'GET';
 
     $curl = curl_init();
@@ -46,8 +42,7 @@ class Wrx_api
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
-    $response = curl_exec($curl);
-    curl_close($curl);
+    $response = curl_exec($curl);    
     $res = json_decode($response);
 
     if( ! empty($res))

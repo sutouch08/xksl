@@ -1,14 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Transfer extends PS_Controller
 {
   public $menu_code = 'ICTRWH';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'TRANSFER';
-	public $title = 'โอนสินค้าระหว่างคลัง';
-  public $filter;
-  public $error = "";
+	public $title = 'โอนสินค้าระหว่างคลัง'; 
   public $require_remark = 1;
   public $is_mobile = FALSE;
 
@@ -46,18 +47,11 @@ class Transfer extends PS_Controller
     );
 
 		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
+		$perpage = get_rows();		
 		$segment  = 4; //-- url segment
-		$rows     = $this->transfer_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$docs     = $this->transfer_model->get_list($filter, $perpage, $this->uri->segment($segment));
+		$rows = $this->transfer_model->count_rows($filter);		
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$docs = $this->transfer_model->get_list($filter, $perpage, $this->uri->segment($segment));
 
     $whs = array();
     $usr = array();
@@ -117,8 +111,7 @@ class Transfer extends PS_Controller
       {
         if($doc->status == -1 OR $doc->status == 0)
         {
-          $uid = genUid();
-          $import = 0;
+          $uid = genUid();          
           $file = isset( $_FILES['uploadFile'] ) ? $_FILES['uploadFile'] : FALSE;
         	$path = $this->config->item('upload_path').'transfer/';
           $file	= 'uploadFile';
@@ -140,19 +133,17 @@ class Transfer extends PS_Controller
       		}
           else
           {
-            ini_set('max_execution_time', 1200);
-            $this->load->library('excel');
+            ini_set('max_execution_time', 1200);            
             $info = $this->upload->data();
             /// read file
-      			$excel = PHPExcel_IOFactory::load($info['full_path']);
+      			$excel = IOFactory::load($info['full_path']);
       			//get only the Cell Collection
-            $cs	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+            $cs	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
-            $count = count($cs);
+            $count = count($cs ?? []);
             $limit = intval(getConfig('IMPORT_ROWS_LIMIT')) + 1;
             $must_accept = 0;
-            $paleetNo = NULL;
-
+           
             if($count > $limit)
             {
               $sc = FALSE;
@@ -449,10 +440,10 @@ class Transfer extends PS_Controller
     if($this->input->post())
     {
       $date_add = db_date($this->input->post('date'), TRUE);
-      $fWh = $this->input->post('from_warehouse_code');
-      $tWh = $this->input->post('to_warehouse_code');
-			$wx_code = get_null(trim($this->input->post('wx_code')));
-      $remark = $this->input->post('remark');
+      $fWh = $this->input->post('from_warehouse_code') ?? '';
+      $tWh = $this->input->post('to_warehouse_code') ?? '';
+			$wx_code = get_null(trim($this->input->post('wx_code') ?? ''));
+      $remark = $this->input->post('remark') ?? '';
       $bookcode = getConfig('BOOK_CODE_TRANSFER');
 
       if($sc === TRUE)
@@ -509,8 +500,8 @@ class Transfer extends PS_Controller
 
   public function is_document_avalible()
   {
-    $code = $this->input->get('code');
-    $uuid = $this->input->get('uuid');
+    $code = $this->input->get('code') ?? '';
+    $uuid = $this->input->get('uuid') ?? '';
     if( ! $this->transfer_model->is_document_avalible($code, $uuid))
     {
       echo "not_available";
@@ -559,8 +550,8 @@ class Transfer extends PS_Controller
   public function update_transfer_qty()
   {
     $sc = TRUE;
-    $id = $this->input->post('id');
-    $qty = $this->input->post('qty');
+    $id = $this->input->post('id') ?? '';
+    $qty = $this->input->post('qty') ?? '';
 
     if( ! $this->transfer_model->update_detail($id, ['qty' => $qty]))
     {
@@ -575,8 +566,8 @@ class Transfer extends PS_Controller
   public function update_uuid()
   {
     $sc = TRUE;
-    $code = trim($this->input->post('code'));
-    $uuid = trim($this->input->post('uuid'));
+    $code = trim($this->input->post('code') ?? '');
+    $uuid = trim($this->input->post('uuid') ?? '');
 
     if( ! empty($uuid))
     {
@@ -588,8 +579,8 @@ class Transfer extends PS_Controller
   public function get_zone()
   {
     $sc = TRUE;
-    $zone_code = $this->input->get('zone_code');
-    $warehouse_code = $this->input->get('warehouse_code');
+    $zone_code = $this->input->get('zone_code') ?? '';
+    $warehouse_code = $this->input->get('warehouse_code') ?? '';
 
     $zone = $this->zone_model->get_zone($zone_code, $warehouse_code);
 
@@ -663,9 +654,9 @@ class Transfer extends PS_Controller
   {
     $sc = TRUE;
 
-    $fWh = $this->input->post('from_warehouse');
-		$tWh = $this->input->post('to_warehouse');
-		$wx_code = get_null(trim($this->input->post('wx_code')));
+    $fWh = $this->input->post('from_warehouse') ?? '';
+		$tWh = $this->input->post('to_warehouse') ?? '';
+		$wx_code = get_null(trim($this->input->post('wx_code') ?? ''));
 
     if($sc === TRUE)
     {
@@ -678,7 +669,7 @@ class Transfer extends PS_Controller
         'date_add' => db_date($this->input->post('date_add'), TRUE),
         'from_warehouse' => $fWh,
         'to_warehouse' => $tWh,
-        'remark' => get_null(trim($this->input->post('remark'))),
+        'remark' => get_null(trim($this->input->post('remark') ?? '' )),
         'direction' => $direction,
         'wx_code' => $wx_code,
         'must_approve' => $must_approve,
@@ -713,7 +704,7 @@ class Transfer extends PS_Controller
   function pull_back()
   {
     $sc = TRUE;
-    $code = $this->input->post('transfer_code');
+    $code = $this->input->post('transfer_code') ?? '';
 
     if($code)
     {
@@ -779,7 +770,7 @@ class Transfer extends PS_Controller
   public function save_as_request()
   {
     $sc = TRUE;
-    $code = $this->input->post('code');
+    $code = $this->input->post('code') ?? '';
 
     if( ! empty($code))
     {
@@ -1742,7 +1733,7 @@ class Transfer extends PS_Controller
 
   public function canAccept()
   {
-    $pm = get_permission('APACWW', $this->_user->uid, $this->_user->id_profile);
+    $pm = get_permission('APACWW', $this->_user->uid);
 
     if( ! empty($pm))
     {
@@ -1833,7 +1824,7 @@ class Transfer extends PS_Controller
   {
     $sc = TRUE;
 
-		$data = json_decode($this->input->post('data'));
+		$data = json_decode($this->input->post('data') ?? '');
 
 		if(!empty($data))
 		{
@@ -2033,7 +2024,7 @@ class Transfer extends PS_Controller
       $res = [];
       $code = $this->input->post('transfer_code');
       $zone_code = $this->input->post('from_zone');
-      $barcode = trim($this->input->post('barcode'));
+      $barcode = trim($this->input->post('barcode') ?? '');
       $qty = $this->input->post('qty');
 
       $item = $this->products_model->get_product_by_barcode($barcode);
@@ -2229,7 +2220,7 @@ class Transfer extends PS_Controller
   public function save_to_zone()
   {
     $sc = TRUE;
-    $ds = json_decode($this->input->post('data'));
+    $ds = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($ds))
     {
@@ -2611,8 +2602,8 @@ class Transfer extends PS_Controller
       $this->load->model('masters/products_model');
 
       $zone_code = $this->input->get('zone_code');
-      $transfer_code = $this->input->get('transfer_code');
-      $product_code = get_null(trim($this->input->get('item_code')));
+      $transfer_code = $this->input->get('transfer_code') ?? '';
+      $product_code = get_null(trim($this->input->get('item_code') ?? ''));
       $product_code = $product_code == '*' ? NULL : $product_code;
 
       $stock = $this->stock_model->get_all_stock_in_zone($zone_code, $product_code);
@@ -2656,7 +2647,7 @@ class Transfer extends PS_Controller
       $this->error = "Missing required parameter";
     }
 
-    echo $sc = TRUE ? json_encode($ds) : $this->error;
+    echo $sc == TRUE ? json_encode($ds) : $this->error;
   }
 
 
@@ -2731,7 +2722,7 @@ class Transfer extends PS_Controller
   {
     $sc = TRUE;
 
-    $reason = trim($this->input->post('reason'));
+    $reason = trim($this->input->post('reason') ?? '');
     $force_cancel = $this->input->post('force_cancel') == 1 ? 1 : 0;
 
     if($this->pm->can_delete)
@@ -2800,7 +2791,7 @@ class Transfer extends PS_Controller
               $arr = array(
                 'status' => 2,
                 'inv_code' => NULL,
-                'cancle_reason' => trim($this->input->post('reason')),
+                'cancle_reason' => $reason,
                 'cancle_user' => $this->_user->uname
               );
 
@@ -2842,6 +2833,7 @@ class Transfer extends PS_Controller
   {
     $this->load->library('printer');
     $doc = $this->transfer_model->get($code);
+
     if(!empty($doc))
     {
       $doc->from_warehouse_name = $this->warehouse_model->get_name($doc->from_warehouse);
@@ -2877,7 +2869,7 @@ class Transfer extends PS_Controller
     if( ! $this->export->export_transfer($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = $this->export->error;
     }
     else
     {
@@ -2905,7 +2897,7 @@ class Transfer extends PS_Controller
   public function confirm_receipted()
   {
     $sc = TRUE;
-    $code = trim($this->input->post('code'));
+    $code = trim($this->input->post('code') ?? '');
     if(!empty($code))
     {
       $this->load->model('orders/orders_model');
@@ -2968,10 +2960,5 @@ class Transfer extends PS_Controller
     );
 
     clear_filter($filter);
-
-    echo 'done';
   }
-
-
-} //--- end class
-?>
+}

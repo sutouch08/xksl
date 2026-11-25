@@ -1,5 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class Consignment_stock extends PS_Controller
 {
@@ -7,8 +9,7 @@ class Consignment_stock extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'CHECK';
 	public $title = 'ตรวจสอบสต็อกฝากขาย(เทียม)';
-  public $filter;
-  public $error;
+  
   public function __construct()
   {
     parent::__construct();
@@ -60,35 +61,34 @@ class Consignment_stock extends PS_Controller
     $data = $this->sap_stock_model->get_list($arr);
     if(!empty($data))
     {
-      //--- load excel library
-      $this->load->library('excel');
+      $excel = new Spreadsheet();
 
-      $this->excel->setActiveSheetIndex(0);
-      $this->excel->getActiveSheet()->setTitle('Stock Zone (SAP)');
+      $excel->setActiveSheetIndex(0);
+      $excel->getActiveSheet()->setTitle('Stock Zone (SAP)');
 
-      $this->excel->getActiveSheet()->setCellValue('A1', 'No.');
-      $this->excel->getActiveSheet()->setCellValue('B1', 'ItemCode');
-      $this->excel->getActiveSheet()->setCellValue('C1', 'OldCode');
-      $this->excel->getActiveSheet()->setCellValue('D1', 'Description');
-      $this->excel->getActiveSheet()->setCellValue('E1', 'BinCode');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'Bin Description');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'Qty');
+      $excel->getActiveSheet()->setCellValue('A1', 'No.');
+      $excel->getActiveSheet()->setCellValue('B1', 'ItemCode');
+      $excel->getActiveSheet()->setCellValue('C1', 'OldCode');
+      $excel->getActiveSheet()->setCellValue('D1', 'Description');
+      $excel->getActiveSheet()->setCellValue('E1', 'BinCode');
+      $excel->getActiveSheet()->setCellValue('F1', 'Bin Description');
+      $excel->getActiveSheet()->setCellValue('G1', 'Qty');
 
       $no = 1;
       $row = 2;
       foreach($data as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->ItemCode);
+        $excel->getActiveSheet()->setCellValue('A'.$row, $no);
+        $excel->getActiveSheet()->setCellValue('B'.$row, $rs->ItemCode);
         if(!empty($rs->U_OLDCODE))
         {
-          $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->U_OLDCODE);
+          $excel->getActiveSheet()->setCellValue('C'.$row, $rs->U_OLDCODE);
         }
 
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->ItemName);
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->BinCode);
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->Descr);
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->OnHandQty);
+        $excel->getActiveSheet()->setCellValue('D'.$row, $rs->ItemName);
+        $excel->getActiveSheet()->setCellValue('E'.$row, $rs->BinCode);
+        $excel->getActiveSheet()->setCellValue('F'.$row, $rs->Descr);
+        $excel->getActiveSheet()->setCellValue('G'.$row, $rs->OnHandQty);
         $no++;
         $row++;
       }
@@ -98,7 +98,7 @@ class Consignment_stock extends PS_Controller
     $file_name = "ConsignStock(SAP).xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
   }
 

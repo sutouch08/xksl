@@ -64,20 +64,16 @@ class Consign_order_model extends CI_Model
   }
 
 
-
   public function update_ref_code($code, $check_code)
   {
     return $this->db->set('ref_code', $check_code)->where('code', $code)->update('consign_order');
   }
 
 
-
   public function drop_import_details($code, $check_code)
   {
     return $this->db->where('consign_code', $code)->where('ref_code', $check_code)->delete('consign_order_detail');
   }
-
-
 
 
   public function has_saved_imported($code, $check_code)
@@ -98,7 +94,6 @@ class Consign_order_model extends CI_Model
   }
 
 
-
   public function get($code)
   {
     $rs = $this->db->where('code', $code)->get('consign_order');
@@ -109,7 +104,6 @@ class Consign_order_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function get_details($code)
@@ -137,6 +131,7 @@ class Consign_order_model extends CI_Model
   public function get_detail($id)
   {
     $rs = $this->db->where('id', $id)->get('consign_order_detail');
+
     if($rs->num_rows() === 1)
     {
       return $rs->row();
@@ -144,7 +139,6 @@ class Consign_order_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function get_exists_detail($code, $product_code, $price, $discountLabel, $input_type)
@@ -164,7 +158,6 @@ class Consign_order_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function delete_detail($id)
@@ -187,7 +180,6 @@ class Consign_order_model extends CI_Model
   }
 
 
-
   public function get_sum_order_qty($code, $product_code)
   {
     $rs = $this->db
@@ -203,7 +195,6 @@ class Consign_order_model extends CI_Model
 
     return 0;
   }
-
 
 
   public function get_item_gp($product_code, $zone_code)
@@ -228,7 +219,6 @@ class Consign_order_model extends CI_Model
   }
 
 
-
   public function get_unsave_qty($code, $product_code, $price, $discount, $input_type)
   {
     $rs = $this->db
@@ -244,7 +234,6 @@ class Consign_order_model extends CI_Model
   }
 
 
-
   public function change_detail_status($id, $status)
   {
     $this->db
@@ -252,6 +241,7 @@ class Consign_order_model extends CI_Model
     ->where('id', $id);
     return $this->db->update('consign_order_detail');
   }
+
 
   public function change_all_detail_status($code, $status)
   {
@@ -518,6 +508,4 @@ class Consign_order_model extends CI_Model
   {
     return $this->db->set('inv_code', $doc_num)->where('code', $code)->update('consign_order');
   }
-
-} //--- end class
-?>
+}

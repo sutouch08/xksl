@@ -55,8 +55,6 @@ class Discount_policy extends PS_Controller
   }
 
 
-
-
   public function add_new()
   {
     if($this->pm->can_add)
@@ -68,7 +66,6 @@ class Discount_policy extends PS_Controller
       redirect($this->home);
     }
   }
-
 
 
   public function add_policy()
@@ -123,7 +120,6 @@ class Discount_policy extends PS_Controller
   }
 
 
-
   public function update_policy()
   {
     $id = $this->input->post('id');
@@ -148,7 +144,6 @@ class Discount_policy extends PS_Controller
       redirect($this->home.'/edit_policy/'.$code);
     }
   }
-
 
 
   public function get_active_rule()
@@ -179,15 +174,12 @@ class Discount_policy extends PS_Controller
   }
 
 
-
-
   public function delete_policy($id)
   {
     $rs = $this->discount_policy_model->delete($id);
 
     echo $rs->status === TRUE ? 'success' : $rs->message;
   }
-
 
 
   public function get_new_code()
@@ -219,6 +211,4 @@ class Discount_policy extends PS_Controller
     clear_filter($filter);
     echo 'done';
   }
-
-}//-- end class
-?>
+}

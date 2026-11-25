@@ -121,10 +121,10 @@ class Move extends PS_Controller
           $arr = array(
             'code' => $code,
             'bookcode' => $bookcode,
-            'reference' => get_null(trim($ds->reference)),
+            'reference' => get_null(trim($ds->reference) ?? ''),
             'from_warehouse' => $ds->warehouse_code,
             'to_warehouse' => $ds->warehouse_code,
-            'remark' => get_null(trim($ds->remark)),
+            'remark' => get_null(trim($ds->remark) ?? ''),
             'user' => $this->_user->uname
           );
 
@@ -846,7 +846,7 @@ class Move extends PS_Controller
 
       $code = $this->input->post('move_code');
       $zone_code = $this->input->post('from_zone');
-      $barcode = trim($this->input->post('barcode'));
+      $barcode = trim($this->input->post('barcode') ?? '');
       $qty = $this->input->post('qty');
 
       $item = $this->products_model->get_product_by_barcode($barcode);
@@ -909,7 +909,7 @@ class Move extends PS_Controller
       $this->load->model('masters/products_model');
 
       $code = $this->input->post('move_code');
-      $barcode = trim($this->input->post('barcode'));
+      $barcode = trim($this->input->post('barcode') ?? '');
       $to_zone = $this->input->post('zone_code');
       $zone = $this->zone_model->get($to_zone);
       $must_accept = empty($zone->user_id) ? 0 : 1;
@@ -1487,7 +1487,7 @@ class Move extends PS_Controller
           $arr = array(
             'status' => 2,
             'inv_code' => NULL,
-            'cancle_reason' => trim($this->input->post('reason')),
+            'cancle_reason' => trim($this->input->post('reason') ?? ''),
             'cancle_user' => $this->_user->uname
           );
 
@@ -1575,7 +1575,7 @@ class Move extends PS_Controller
     if(! $this->export->export_move($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = trim($this->export->error ?? '');
     }
 
     return $sc;

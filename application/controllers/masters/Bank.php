@@ -6,8 +6,7 @@ class Bank extends PS_Controller
   public $menu_code = 'DBBANK';
 	public $menu_group_code = 'DB';
 	public $title = 'บัญชีธนาคาร';
-	public $error;
-
+	
   public function __construct()
   {
     parent::__construct();
@@ -15,7 +14,6 @@ class Bank extends PS_Controller
     $this->load->model('masters/bank_model');
     $this->load->helper('bank');
   }
-
 
 
   public function index()
@@ -26,31 +24,16 @@ class Bank extends PS_Controller
       'branch' => get_filter('branch', 'branch', ''),
       'bank_code' => get_filter('bank_code', 'bank_code', 'all')
     );
-
-
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-		$segment  = 4; //-- url segment
-		$rows     = $this->bank_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+		
+		$perpage = get_rows();		
+		$segment  = 4;
+		$rows     = $this->bank_model->count_rows($filter);		
 		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$banks = $this->bank_model->get_list($filter, $perpage, $this->uri->segment($segment));
-
     $filter['data'] = $banks;
-
 		$this->pagination->initialize($init);
     $this->load->view('masters/bank/bank_account_list', $filter);
   }
-
-
-
 
   public function add_new()
   {
@@ -58,10 +41,10 @@ class Bank extends PS_Controller
   }
 
 
-
 	public function add()
 	{
 		$sc = TRUE;
+
 		if($this->pm->can_add)
 		{
 			$bank_code = $this->input->post('bank_code');
@@ -80,7 +63,6 @@ class Bank extends PS_Controller
 				$sc = FALSE;
 				$this->error = "กรุณาระบุชื่อบัญชี";
 			}
-
 
 			if(empty($account_no))
 			{
@@ -131,7 +113,6 @@ class Bank extends PS_Controller
 					$sc = FALSE;
 					$this->error = "เลขที่บัญชีซ้ำ";
 				}
-
 			}
 		}
 		else
@@ -139,7 +120,6 @@ class Bank extends PS_Controller
 			$sc = FALSE;
 			$this->error = "คุณไม่มีสิทธ์เพิ่มบัญชีธนาคาร";
 		}
-
 
 		echo $sc === TRUE ? 'success' : $this->error;
 	}
@@ -156,10 +136,10 @@ class Bank extends PS_Controller
 	}
 
 
-
 	public function update()
 	{
 		$sc = TRUE;
+
 		if($this->pm->can_edit)
 		{
 			$id = $this->input->post('id');
@@ -180,7 +160,6 @@ class Bank extends PS_Controller
 				$this->error = "กรุณาระบุชื่อบัญชี";
 			}
 
-
 			if(empty($account_no))
 			{
 				$sc = FALSE;
@@ -199,10 +178,8 @@ class Bank extends PS_Controller
 				$this->error = "Account Id not found";
 			}
 
-
 			if($sc === TRUE)
 			{
-
 				//--- check duplicate acc_no
 				$exists = $this->bank_model->is_exists($account_no, $id);
 
@@ -237,7 +214,6 @@ class Bank extends PS_Controller
 					$sc = FALSE;
 					$this->error = "เลขที่บัญชีซ้ำ";
 				}
-
 			}
 		}
 		else
@@ -245,7 +221,6 @@ class Bank extends PS_Controller
 			$sc = FALSE;
 			$this->error = "คุณไม่มีสิทธ์แก้ไขบัญชีธนาคาร";
 		}
-
 
 		echo $sc === TRUE ? 'success' : $this->error;
 	}
@@ -290,7 +265,6 @@ class Bank extends PS_Controller
 
 		echo $sc === TRUE ? 'success' : $this->error;
 	}
-
 	
 
   public function clear_filter()
@@ -302,11 +276,6 @@ class Bank extends PS_Controller
       'bank_code'
     );
 
-    clear_filter($filter);
-
-    echo "done!";
+    clear_filter($filter);   
   }
-
-
-} //---- end class
-?>
+}

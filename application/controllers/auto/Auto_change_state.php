@@ -1,22 +1,15 @@
 <?php
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 class Auto_change_state extends PS_Controller
-{
-  public $home;
-  public $mc;
-  public $ms;
-  public $title = "Change state ";
-  public $isViewer = FALSE;
-  public $notibars = FALSE;
+{  
+  public $title = "Change state ";  
   public $menu_code = 'SOATCS';
   public $menu_group_code = 'SO';
-  public $pm;
-  public $error;
-
+  
   public function __construct()
   {
-    parent::__construct();
-    $this->ms = $this->load->database('ms', TRUE); //--- SAP database
-    $this->mc = $this->load->database('mc', TRUE); //--- Temp Database
+    parent::__construct();    
     $this->home = base_url().'auto/auto_change_state';
     $this->load->model('inventory/delivery_order_model');
     $this->load->model('orders/orders_model');
@@ -26,7 +19,7 @@ class Auto_change_state extends PS_Controller
 
   public function index()
   {
-    $limit = getConfig('AUTO_CHANGE_STATE_LIMIT');
+    $limit = intval(getConfig('AUTO_CHANGE_STATE_LIMIT'));
     $limit = empty($limit) ? 100 : $limit;
 
     $filter = array(
@@ -145,12 +138,9 @@ class Auto_change_state extends PS_Controller
     }
     else
     {
-      $info = $this->upload->data();
-      $this->load->library('excel');
-      /// read file
-      $excel = PHPExcel_IOFactory::load($info['full_path']);
-      //get only the Cell Collection
-      $collection	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+      $info = $this->upload->data();     
+      $excel = IOFactory::load($info['full_path']);      
+      $collection	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
       if( ! empty($collection))
       {
@@ -164,7 +154,7 @@ class Auto_change_state extends PS_Controller
           if($i > 1)
           {
             $j++;
-            $ro[] = array('code' => trim($rs['A']));
+            $ro[] = array('code' => trim($rs['A'] ?? ''));
 
             if($j == 1000)
             {
@@ -253,5 +243,4 @@ class Auto_change_state extends PS_Controller
 
     $this->_response($sc);
   }
-} //--- end class
- ?>
+} 

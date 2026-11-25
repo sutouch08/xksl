@@ -1,12 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Receive_po_by_product extends PS_Controller
 {
   public $menu_code = 'RPURPD';
 	public $menu_group_code = 'RE';
   public $menu_sub_group_code = 'REPO';
 	public $title = 'รายงาน การรับสินค้าแยกตามสินค้า';
-  public $filter;
+  
   public function __construct()
   {
     parent::__construct();
@@ -132,9 +135,6 @@ class Receive_po_by_product extends PS_Controller
   }
 
 
-
-
-
   public function do_export()
   {
     $token = $this->input->post('token');
@@ -207,35 +207,33 @@ class Receive_po_by_product extends PS_Controller
 
     $result = $this->receive_po_by_product_model->get_data($arr);
 
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Receive PO BY Document');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();
+    $sheet->setTitle('Receive PO BY Product');
 
     //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', $title);
-    $this->excel->getActiveSheet()->mergeCells('A1:J1');
-    $this->excel->getActiveSheet()->setCellValue('A2', "เลขที่เอกสาร : {$document}");
-    $this->excel->getActiveSheet()->mergeCells('A2:J2');
-    $this->excel->getActiveSheet()->setCellValue('A3', "รหัสผู้ขาย : {$vendor}");
-    $this->excel->getActiveSheet()->mergeCells('A3:J3');
-    $this->excel->getActiveSheet()->setCellValue('A4', "ใบสั่งซื้อ : {$po}");
-    $this->excel->getActiveSheet()->mergeCells('A4:J4');
-    $this->excel->getActiveSheet()->setCellValue('A5', "สินค้า : {$products}");
-    $this->excel->getActiveSheet()->mergeCells('A5:J5');
+    $sheet->setCellValue('A1', $title);
+    $sheet->mergeCells('A1:J1');
+    $sheet->setCellValue('A2', "เลขที่เอกสาร : {$document}");
+    $sheet->mergeCells('A2:J2');
+    $sheet->setCellValue('A3', "รหัสผู้ขาย : {$vendor}");
+    $sheet->mergeCells('A3:J3');
+    $sheet->setCellValue('A4', "ใบสั่งซื้อ : {$po}");
+    $sheet->mergeCells('A4:J4');
+    $sheet->setCellValue('A5', "สินค้า : {$products}");
+    $sheet->mergeCells('A5:J5');
 
     //--- set Table header
-    $this->excel->getActiveSheet()->setCellValue('A6', 'ลำดับ');
-    $this->excel->getActiveSheet()->setCellValue('B6', 'วันที่');
-    $this->excel->getActiveSheet()->setCellValue('C6', 'เลขที่เอกสาร');
-    $this->excel->getActiveSheet()->setCellValue('D6', 'ใบสั่งซื้อ');
-    $this->excel->getActiveSheet()->setCellValue('E6', 'ใบส่งของ');
-    $this->excel->getActiveSheet()->setCellValue('F6', 'SAP No.');
-    $this->excel->getActiveSheet()->setCellValue('G6', 'ผู้ขาย');
-    $this->excel->getActiveSheet()->setCellValue('H6', 'สินค้า');
-    $this->excel->getActiveSheet()->setCellValue('I6', 'จำนวน');
-    $this->excel->getActiveSheet()->setCellValue('J6', 'มูลค่า');
+    $sheet->setCellValue('A6', 'ลำดับ');
+    $sheet->setCellValue('B6', 'วันที่');
+    $sheet->setCellValue('C6', 'เลขที่เอกสาร');
+    $sheet->setCellValue('D6', 'ใบสั่งซื้อ');
+    $sheet->setCellValue('E6', 'ใบส่งของ');
+    $sheet->setCellValue('F6', 'SAP No.');
+    $sheet->setCellValue('G6', 'ผู้ขาย');
+    $sheet->setCellValue('H6', 'สินค้า');
+    $sheet->setCellValue('I6', 'จำนวน');
+    $sheet->setCellValue('J6', 'มูลค่า');
 
     $row = 7;
     if(!empty($result))
@@ -245,54 +243,40 @@ class Receive_po_by_product extends PS_Controller
       $totalAmount = 0;
       foreach($result as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->po_code);
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->invoice_code);
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->inv_code); //--- SAP No.
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->vendor_code.' : '.$rs->vendor_name);
-        $this->excel->getActiveSheet()->setCellValue('H'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('I'.$row, $rs->qty);
-        $this->excel->getActiveSheet()->setCellValue('J'.$row, $rs->amount);
+        $sheet->setCellValue('A'.$row, $no);
+        $sheet->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
+        $sheet->setCellValue('C'.$row, $rs->code);
+        $sheet->setCellValue('D'.$row, $rs->po_code);
+        $sheet->setCellValue('E'.$row, $rs->invoice_code);
+        $sheet->setCellValue('F'.$row, $rs->inv_code); //--- SAP No.
+        $sheet->setCellValue('G'.$row, $rs->vendor_code.' : '.$rs->vendor_name);
+        $sheet->setCellValue('H'.$row, $rs->product_code);
+        $sheet->setCellValue('I'.$row, $rs->qty);
+        $sheet->setCellValue('J'.$row, $rs->amount);
         $totalQty += $rs->qty;
         $totalAmount += $rs->amount;
         $no++;
         $row++;
       }
 
+      $sheet->setCellValue('A'.$row, 'รวม');
+      $sheet->mergeCells('A'.$row.':H'.$row);
+      $sheet->setCellValue('I'.$row, $totalQty);
+      $sheet->setCellValue('J'.$row, $totalAmount);
 
-
-      $this->excel->getActiveSheet()->setCellValue('A'.$row, 'รวม');
-      $this->excel->getActiveSheet()->mergeCells('A'.$row.':H'.$row);
-      $this->excel->getActiveSheet()->setCellValue('I'.$row, $totalQty);
-      $this->excel->getActiveSheet()->setCellValue('J'.$row, $totalAmount);
-
-      $this->excel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
-      $this->excel->getActiveSheet()->getStyle('D6:D'.$row)->getNumberFormat()->setFormatCode('0');
-      $this->excel->getActiveSheet()->getStyle('F6:F'.$row)->getNumberFormat()->setFormatCode('0');
-      $this->excel->getActiveSheet()->getStyle('I6:J'.$row)->getAlignment()->setHorizontal('right');
-      $this->excel->getActiveSheet()->getStyle('I6:I'.$row)->getNumberFormat()->setFormatCode('#,##0');
-      $this->excel->getActiveSheet()->getStyle('J6:J'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
+      $sheet->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
+      $sheet->getStyle('D6:D'.$row)->getNumberFormat()->setFormatCode('0');
+      $sheet->getStyle('F6:F'.$row)->getNumberFormat()->setFormatCode('0');
+      $sheet->getStyle('I6:J'.$row)->getAlignment()->setHorizontal('right');
+      $sheet->getStyle('I6:I'.$row)->getNumberFormat()->setFormatCode('#,##0');
+      $sheet->getStyle('J6:J'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
     }
 
     setToken($token);
     $file_name = "รายงานการรับสินค้าแยกตามสินค้า.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
-
   }
-
-
-} //--- end class
-
-
-
-
-
-
-
-
- ?>
+}

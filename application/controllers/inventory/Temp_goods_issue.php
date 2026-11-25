@@ -7,7 +7,7 @@ class Temp_goods_issue extends PS_Controller
 	public $menu_group_code = 'TE';
   public $menu_sub_group_code = 'TEADJUST';
 	public $title = 'ตรวจสอบ Goods Issue';
-  public $filter;
+ 
   public function __construct()
   {
     parent::__construct();
@@ -27,12 +27,7 @@ class Temp_goods_issue extends PS_Controller
 
 		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
+		
 		$segment  = 4; //-- url segment
 		$rows     = $this->temp_goods_issue_model->count_rows($filter, 8);
 		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
@@ -77,9 +72,5 @@ class Temp_goods_issue extends PS_Controller
     );
 
     clear_filter($filter);
-
-    echo 'done';
   }
-
-}//--- end class
-?>
+}

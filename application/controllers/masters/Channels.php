@@ -21,17 +21,9 @@ class Channels extends PS_Controller
 		$code = get_filter('code', 'channels_code', '');
 		$name = get_filter('name', 'channels_name', '');
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
+		$perpage = get_filter('set_rows', 'rows', 20);		
+		$segment = 4;
 		$rows = $this->channels_model->count_rows($code, $name);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$rs = $this->channels_model->get_data($code, $name, $perpage, $this->uri->segment($segment));
 
@@ -67,6 +59,7 @@ class Channels extends PS_Controller
       $customer_name = $this->input->post('customer_name');
 			$type_code = $this->input->post('type_code');
       $is_online = $this->input->post('is_online');
+
       $ds = array(
         'code' => $code,
         'name' => $name,
@@ -252,8 +245,5 @@ class Channels extends PS_Controller
   public function clear_filter()
 	{
 		clear_filter(array('channels_code', 'channels_name'));
-    echo 'done';
-	}
-
-}//--- end class
- ?>
+  }
+}

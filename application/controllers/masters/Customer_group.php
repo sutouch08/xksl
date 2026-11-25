@@ -19,19 +19,10 @@ class Customer_group extends PS_Controller
   public function index()
   {
 		$code = get_filter('code', 'code', '');
-		$name = get_filter('name', 'name', '');
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
+		$name = get_filter('name', 'name', '');	
+		$perpage = get_rows();
+		$segment = 4;
 		$rows = $this->customer_group_model->count_rows($code, $name);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$rs = $this->customer_group_model->get_data($code, $name, $perpage, $this->uri->segment($segment));
     $ds = array(
@@ -179,7 +170,6 @@ class Customer_group extends PS_Controller
   }
 
 
-
   public function delete($code)
   {
     if($code != '')
@@ -202,13 +192,8 @@ class Customer_group extends PS_Controller
   }
 
 
-
   public function clear_filter()
 	{
-		$this->session->unset_userdata('code');
-    $this->session->unset_userdata('name');
-		echo 'done';
-	}
-
-}//--- end class
- ?>
+		clear_filter(array('code', 'name'));
+  }
+}

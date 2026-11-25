@@ -1,5 +1,5 @@
 <?php
-function dispatch_status($status = NULL)
+function dispatch_status($status)
 {
   $ds = array(
     'P' => 'Pending',
@@ -9,7 +9,5 @@ function dispatch_status($status = NULL)
     'D' => 'Canceled'
   );
 
-  return empty($ds[$status]) ? 'Unknow' : $ds[$status];
+  return empty($ds[$status ?? '']) ? 'Unknow' : $ds[$status];
 }
-
- ?>

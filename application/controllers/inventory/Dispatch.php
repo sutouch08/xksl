@@ -6,9 +6,7 @@ class Dispatch extends PS_Controller
   public $menu_code = 'ICODDP';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'PICKPACK';
-	public $title = 'Dispatch';
-  public $filter;
-  public $error;
+	public $title = 'Dispatch';  
   public $segment = 4;
 
   public function __construct()
@@ -86,7 +84,7 @@ class Dispatch extends PS_Controller
           'plate_province' => $ds->province,
           'driver_name' => $ds->driver_name,
           'date_add' => $date_add,
-          'remark' => get_null(trim($ds->remark)),
+          'remark' => get_null(trim($ds->remark) ?? ''),
           'user' => $this->_user->uname
         );
 
@@ -154,7 +152,7 @@ class Dispatch extends PS_Controller
           'plate_no' => $ds->plate_no,
           'plate_province' => $ds->province,
           'driver_name' => $ds->driver_name,
-          'remark' => get_null(trim($ds->remark)),
+          'remark' => get_null(trim($ds->remark) ?? ''),
           'date_upd' => now(),
           'update_user' => $this->_user->uname
         );
@@ -775,7 +773,7 @@ class Dispatch extends PS_Controller
     if($this->pm->can_delete)
     {
       $code = $this->input->post('code');
-      $reason = trim($this->input->post('reason'));
+      $reason = trim($this->input->post('reason') ?? '');
 
       if( ! empty($code))
       {

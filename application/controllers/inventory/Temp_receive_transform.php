@@ -7,7 +7,7 @@ class Temp_receive_transform extends PS_Controller
 	public $menu_group_code = 'TE';
   public $menu_sub_group_code = 'TEADJUST';
 	public $title = 'ตรวจสอบ Goods Receipt';
-  public $filter;
+ 
   public function __construct()
   {
     parent::__construct();
@@ -25,19 +25,16 @@ class Temp_receive_transform extends PS_Controller
       'status'      => get_filter('status', 'temp_receive_status', 'all')
     );
 
-		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
 		if($perpage > 300)
 		{
 			$perpage = 20;
 		}
 
-		$segment  = 4; //-- url segment
-		$rows     = $this->temp_receive_transform_model->count_rows($filter, 8);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->temp_receive_transform_model->get_list($filter, $perpage, $this->uri->segment($segment), 8);
+		$segment  = 4;
+		$rows = $this->temp_receive_transform_model->count_rows($filter, 8);
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$orders = $this->temp_receive_transform_model->get_list($filter, $perpage, $this->uri->segment($segment), 8);
 
     $filter['orders'] = $orders;
 
@@ -78,9 +75,5 @@ class Temp_receive_transform extends PS_Controller
     );
 
     clear_filter($filter);
-
-    echo 'done';
   }
-
-}//--- end class
-?>
+}

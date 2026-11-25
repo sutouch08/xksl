@@ -75,7 +75,7 @@ class Stock_zone extends REST_Controller
     //--- Get raw post data
     $json = file_get_contents("php://input");
 
-    $data = json_decode($json);
+    $data = json_decode($json ?? '{}');
 
     if(empty($data) OR empty($data->zone_code))
     {
@@ -142,7 +142,7 @@ class Stock_zone extends REST_Controller
     //--- Get raw post data
     $json = file_get_contents("php://input");
 
-    $data = json_decode($json);
+    $data = json_decode($json ?? '{}');
 
     if(empty($data) OR empty($data->zone_code))
     {
@@ -202,4 +202,4 @@ class Stock_zone extends REST_Controller
       $this->response($arr, 400);
     }
   }
-}// End Class
+}

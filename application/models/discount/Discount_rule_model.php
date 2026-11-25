@@ -19,7 +19,6 @@ class Discount_rule_model extends CI_Model
   }
 
 
-
   public function update($id, array $ds = array())
   {
     if(!empty($ds))
@@ -247,7 +246,6 @@ class Discount_rule_model extends CI_Model
   }
 
 
-
   public function getRuleCustomerGroup($id)
   {
     $sc = array();
@@ -293,7 +291,6 @@ class Discount_rule_model extends CI_Model
   }
 
 
-
   public function getRuleCustomerArea($id)
   {
     $sc = array();
@@ -308,7 +305,6 @@ class Discount_rule_model extends CI_Model
 
     return $sc;
   }
-
 
 
   public function getRuleCustomerClass($id)
@@ -327,7 +323,6 @@ class Discount_rule_model extends CI_Model
   }
 
 
-
   public function getRuleProductStyle($id)
   {
     $sc = array();
@@ -342,8 +337,6 @@ class Discount_rule_model extends CI_Model
 
     return $sc;
   }
-
-
 
 
   public function getRuleProductGroup($id)
@@ -362,7 +355,6 @@ class Discount_rule_model extends CI_Model
   }
 
 
-
   public function getRuleProductSubGroup($id)
   {
     $sc = array();
@@ -379,8 +371,6 @@ class Discount_rule_model extends CI_Model
   }
 
 
-
-
   public function getRuleProductType($id)
   {
     $sc = array();
@@ -395,8 +385,6 @@ class Discount_rule_model extends CI_Model
 
     return $sc;
   }
-
-
 
 
 

@@ -24,16 +24,12 @@ class Payment_methods extends PS_Controller
       'term' => get_filter('term', 'payment_term', 'all'),
       'role' => get_filter('role', 'payment_role', 'all')
     );
-
-		//--- แสดงผลกี่รายการต่อหน้า
+		
 		$perpage = get_rows();
-
-		$segment = 4; //-- url segment
+		$segment = 4;
 		$rows = $this->payment_methods_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$filter['data'] = $this->payment_methods_model->get_list($filter, $perpage, $this->uri->segment($segment));
-
 		$this->pagination->initialize($init);
     $this->load->view('masters/payment_methods/payment_methods_list', $filter);
   }
@@ -94,14 +90,12 @@ class Payment_methods extends PS_Controller
   }
 
 
-
   public function edit($code)
   {
     $data = $this->payment_methods_model->get_payment_methods($code);
 
     $this->load->view('masters/payment_methods/payment_methods_edit', $data);
   }
-
 
 
   public function update()
@@ -112,7 +106,7 @@ class Payment_methods extends PS_Controller
     {
       $id = $this->input->post('id');
       $code = $this->input->post('code');
-      $name = trim($this->input->post('name'));
+      $name = trim($this->input->post('name') ?? '');
       $role = $this->input->post('role');
       $has_term = ($role == 4 OR $role == 5) ? 1 : 0;
 
@@ -154,7 +148,6 @@ class Payment_methods extends PS_Controller
   }
 
 
-
   public function delete($code)
   {
     if($code != '')
@@ -177,7 +170,6 @@ class Payment_methods extends PS_Controller
   }
 
 
-
   //--- เช็คว่าการชำระเงินเป็นแบบเครดิตหรือไม่
   public function is_credit_payment($code)
   {
@@ -192,6 +184,4 @@ class Payment_methods extends PS_Controller
 		clear_filter(array('payment_code', 'payment_name', 'payment_term', 'payment_role'));
 		echo 'done';
 	}
-
-}//--- end class
- ?>
+}

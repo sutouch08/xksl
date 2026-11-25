@@ -7,6 +7,7 @@ function getInvoiceList($code, $invoice_list, $status = 0)
 	{
 		$i = 1;
 		$count = count($invoice_list);
+
 		foreach($invoice_list as $rs)
 		{
 			$sc .= '<div class="inline">';
@@ -22,6 +23,7 @@ function getInvoiceList($code, $invoice_list, $status = 0)
 			{
 				$sc .= $count > 1 ? ($i < $count ? ", " : "") : "";
 			}
+
 			$sc .= '</div>';
 			$i++;
 		}
@@ -39,7 +41,7 @@ function getAllInvoiceText($invoice_list)
 	if(!empty($invoice_list))
 	{
 		$i = 1;
-		$count = count($invoice_list);
+		
 		foreach($invoice_list as $rs)
 		{
 			$sc .= $i === 1 ? $rs->invoice_code : ", {$rs->invoice_code}";
@@ -49,5 +51,3 @@ function getAllInvoiceText($invoice_list)
 
 	return $sc;
 }
-
- ?>

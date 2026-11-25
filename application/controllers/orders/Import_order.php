@@ -1,4 +1,6 @@
 <?php
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 class Import_order extends CI_Controller
 {
   public $ms;
@@ -7,7 +9,6 @@ class Import_order extends CI_Controller
 	public $sync_chatbot_stock = FALSE;
   public $error;
   public $message;
-
 
   public function __construct()
   {
@@ -72,14 +73,12 @@ class Import_order extends CI_Controller
     else
     {
       $info = $this->upload->data();
-      /// read file
-      $excel = PHPExcel_IOFactory::load($info['full_path']);
-      //get only the Cell Collection
-      $collection	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+      $excel = IOFactory::load($info['full_path']);
+      $collection	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
       if( ! empty($collection))
       {
-        $count = count($collection);
+        $count = count($collection ?? []);
         $limit = intval(getConfig('IMPORT_ROWS_LIMIT')) + 1;
 
         if($count > $limit)
@@ -188,8 +187,6 @@ class Import_order extends CI_Controller
                         'is_count' => $row->is_count,
                         'is_import' => $row->is_import
                       );
-
-
 
                       if( ! $this->orders_model->add_detail($arr))
                       {
@@ -722,18 +719,18 @@ class Import_order extends CI_Controller
         else
         {
           //--- ชื่อผู้รับ / orderNumber / itemId ต้องไม่เป็นค่าว่าง
-          if($sc === TRUE && ! empty($rs['A']) && ! empty($rs['I']) && ! empty($rs['M']))
+          if($sc === TRUE && ! empty($rs['A'] ?? '') && ! empty($rs['I'] ?? '') && ! empty($rs['M'] ?? ''))
           {
             //--- ใช้ orderNumber เป็น key array
             //---  ถ้า orderNumber เริ่มต้นด้วย LA ให้ตัด 2 ตัวหน้าออก
-            $ref_code = trim($rs['I']);
+            $ref_code = trim($rs['I'] ?? '');
             $ref_code = substr($ref_code, 0, 2) == 'LA' ? substr($ref_code, 2) : $ref_code;
 
             //--- เช็คว่ามี key อยู่แล้วหรือไม่
             //--- ถ้ายังไม่มีให้สร้างใหม่ ถ้ามีแล้ว ให้เพิ่ม รายการสินค้าเข้าไป
             if( ! isset($ds[$ref_code]))
             {
-              $date_add = db_date(trim($rs['J']));
+              $date_add = db_date(trim($rs['J'] ?? ''));
 
               //--- check date format only check not convert
               if( ! is_valid_date($date_add))
@@ -742,7 +739,7 @@ class Import_order extends CI_Controller
                 $this->error = "Invalid Date format at Line{$i}";
               }
 
-              $warehouse_code = empty(trim($rs['X'])) ? $default_warehouse : trim($rs['X']);
+              $warehouse_code = empty(trim($rs['X'] ?? '')) ? $default_warehouse : trim($rs['X'] ?? '');
 
               //--- check warehouse cache
               //--- if not extsts get form database and add to cache
@@ -764,7 +761,7 @@ class Import_order extends CI_Controller
               $hold = $rs['U'] == 1 ? TRUE : FALSE;
 
               //---- กำหนดช่องทางการขายเป็นรหัส
-              $channels_code = trim($rs['L']);
+              $channels_code = trim($rs['L'] ?? '');
 
               if( ! empty($channels_code))
               {
@@ -793,7 +790,7 @@ class Import_order extends CI_Controller
               }
 
               //--- กำหนดช่องทางการชำระเงิน
-              $payment_code = trim($rs['K']);
+              $payment_code = trim($rs['K'] ?? '');
 
               if( ! empty($payment_code))
               {
@@ -820,7 +817,7 @@ class Import_order extends CI_Controller
                 $this->error .= "Payment Method is required at Line {$i} <br/>";
               }
 
-              $customer_code = empty(trim($rs['Z'])) ? NULL : trim($rs['Z']);
+              $customer_code = empty(trim($rs['Z'] ?? '')) ? NULL : trim($rs['Z'] ?? '');
 
               if(empty($customer_code))
               {
@@ -869,7 +866,7 @@ class Import_order extends CI_Controller
               $customer = $customerCache[$customer_code];
 
               //--- check item cache
-              $item_code = trim($rs['M']);
+              $item_code = trim($rs['M'] ?? '');
 
               if( ! isset($itemsCache[$item_code]))
               {
@@ -894,26 +891,26 @@ class Import_order extends CI_Controller
 
               $item = empty($itemsCache[$item_code]) ? NULL : $itemsCache[$item_code];
 
-              $tax_status = empty(trim($rs['AB'])) ? 0 : (trim($rs['AB']) == 1 ? 1 : 0);
+              $tax_status = empty(trim($rs['AB'] ?? '')) ? 0 : (trim($rs['AB'] ?? '') == 1 ? 1 : 0);
 
               if($tax_status)
               {
-                $is_etax = empty(trim($rs['AC'])) ? 0 : (trim($rs['AC']) && $tax_status == 1 ? 1 : 0);
+                $is_etax = empty(trim($rs['AC'] ?? '')) ? 0 : (trim($rs['AC'] ?? '') && $tax_status == 1 ? 1 : 0);
 
-                $tax_type = empty(trim($rs['AD'])) ? "NIDN" : trim($rs['AD']);
+                $tax_type = empty(trim($rs['AD'] ?? '')) ? "NIDN" : trim($rs['AD'] ?? '');
                 $tax_type = empty($taxType[$tax_type]) ? "NIDN" : $tax_type;
 
-                $tax_id = empty(trim($rs['AE'])) ? NULL : trim($rs['AE']);
-                $name = empty(trim($rs['AF'])) ? NULL : trim($rs['AF']);
-                $branch_code = empty(trim($rs['AG'])) ? '00000' : trim($rs['AG']);
-                $branch_name = empty(trim($rs['AH'])) ? 'สำนักงานใหญ่' : trim($rs['AH']);
-                $address = empty(trim($rs['AI'])) ? NULL : trim($rs['AI']);
-                $sub_district = empty(trim($rs['AJ'])) ? NULL : trim($rs['AJ']);
-                $district = empty(trim($rs['AK'])) ? NULL : trim($rs['AK']);
-                $province = empty(trim($rs['AL'])) ? NULL : trim($rs['AL']);
-                $postcode = empty(trim($rs['AM'])) ? NULL : trim($rs['AM']);
-                $phone = empty(trim($rs['AN'])) ? NULL : trim($rs['AN']);
-                $email = empty(trim($rs['AO'])) ? NULL : trim($rs['AO']);
+                $tax_id = empty(trim($rs['AE'] ?? '')) ? NULL : trim($rs['AE'] ?? '');
+                $name = empty(trim($rs['AF'] ?? '')) ? NULL : trim($rs['AF'] ?? '');
+                $branch_code = empty(trim($rs['AG'] ?? '')) ? '00000' : trim($rs['AG'] ?? '');
+                $branch_name = empty(trim($rs['AH'] ?? '')) ? 'สำนักงานใหญ่' : trim($rs['AH'] ?? '');
+                $address = empty(trim($rs['AI'] ?? '')) ? NULL : trim($rs['AI'] ?? '');
+                $sub_district = empty(trim($rs['AJ'] ?? '')) ? NULL : trim($rs['AJ'] ?? '');
+                $district = empty(trim($rs['AK'] ?? '')) ? NULL : trim($rs['AK'] ?? '');
+                $province = empty(trim($rs['AL'] ?? '')) ? NULL : trim($rs['AL'] ?? '');
+                $postcode = empty(trim($rs['AM'] ?? '')) ? NULL : trim($rs['AM'] ?? '');
+                $phone = empty(trim($rs['AN'] ?? '')) ? NULL : trim($rs['AN'] ?? '');
+                $email = empty(trim($rs['AO'] ?? '')) ? NULL : trim($rs['AO'] ?? '');
 
                 if($is_etax && empty($email))
                 {
@@ -935,39 +932,39 @@ class Import_order extends CI_Controller
                 $sale_code = empty($customer) ? NULL : $customer->sale_code;
 
                 //---	หากเป็นออนไลน์ ลูกค้าออนไลน์ชื่ออะไร
-                $customer_ref = addslashes(trim($rs['A']));
+                $customer_ref = addslashes(trim($rs['A'] ?? ''));
 
                 //--- ค่าจัดส่ง
-                $shipping_fee = empty($rs['Q']) ? 0.00 : trim($rs['Q']);
+                $shipping_fee = empty($rs['Q'] ?? '') ? 0.00 : trim($rs['Q'] ?? '');
                 $shipping_fee = is_numeric($shipping_fee) ? $shipping_fee : 0.00;
 
                 //--- shipping Number
-                $shipping_code = trim($rs['T']);
+                $shipping_code = trim($rs['T'] ?? '');
 
                 //--- ค่าบริการอื่นๆ
                 $service_fee = 0;
 
                 //---	Cod amount
-                $cod_amount = $payment_code == 'COD' ? (empty($rs['AA']) ? 0.00 : $rs['AA']) : 0.00;
+                $cod_amount = $payment_code == 'COD' ? (empty($rs['AA'] ?? '') ? 0.00 : $rs['AA'] ?? '') : 0.00;
                 $cod_amount = is_numeric($cod_amount) ? $cod_amount : 0;
 
                 //-- remark
-                $remark = get_null(trim($rs['V']));
+                $remark = get_null(trim($rs['V'] ?? ''));
 
-                $id_address = $this->address_model->get_id($customer_ref, trim($rs['B']));
+                $id_address = $this->address_model->get_id($customer_ref, trim($rs['B'] ?? ''));
 
                 if( empty($id_address))
                 {
                   $arr = array(
                     'code' => $customer_ref,
                     'name' => $customer_ref,
-                    'address' => trim($rs['B']),
-                    'sub_district' => trim($rs['E']),
-                    'district' => trim($rs['D']),
-                    'province' => trim($rs['C']),
-                    'postcode' => trim($rs['F']),
-                    'phone' => trim($rs['H']),
-                    'country' => empty(trim($rs['Y'])) ? "Thailand" : trim($rs['Y']),
+                    'address' => trim($rs['B'] ?? ''),
+                    'sub_district' => trim($rs['E'] ?? ''),
+                    'district' => trim($rs['D'] ?? ''),
+                    'province' => trim($rs['C'] ?? ''),
+                    'postcode' => trim($rs['F'] ?? ''),
+                    'phone' => trim($rs['H'] ?? ''),
+                    'country' => empty(trim($rs['Y'] ?? '')) ? "Thailand" : trim($rs['Y'] ?? ''),
                     'alias' => 'Home',
                     'is_default' => 1
                   );
@@ -975,16 +972,16 @@ class Import_order extends CI_Controller
                   $id_address = $this->address_model->add_shipping_address($arr);
                 }
 
-                $qty = empty(trim($rs['N'])) ? 1 : str_replace(',', '', $rs['N']);
+                $qty = empty(trim($rs['N'] ?? '')) ? 1 : str_replace(',', '', $rs['N'] ?? '');
                 $qty = is_numeric($qty) ? $qty : 1;
 
                 //--- ราคา (เอาราคาที่ใส่มา / จำนวน + ส่วนลดต่อชิ้น)
-                $price = empty($rs['O']) ? 0.00 : str_replace(",", "", $rs['O']); //--- ราคารวมไม่หักส่วนลด
+                $price = empty($rs['O'] ?? '') ? 0.00 : str_replace(",", "", $rs['O'] ?? ''); //--- ราคารวมไม่หักส่วนลด
                 $price = is_numeric($price) ? $price : 0;
                 $price = $price > 0 ? ($price/$qty) : 0; //--- ราคาต่อชิ้น
 
                 //--- ส่วนลด (รวม)
-                $discount_amount = empty(trim($rs['P'])) ? 0.00 : str_replace(',', '', trim($rs['P']));
+                $discount_amount = empty(trim($rs['P'] ?? '')) ? 0.00 : str_replace(',', '', trim($rs['P'] ?? ''));
                 $discount_amount = is_numeric($discount_amount) ? $discount_amount : 0;
 
                 //--- ส่วนลด (ต่อชิ้น)
@@ -1017,8 +1014,8 @@ class Import_order extends CI_Controller
                   'is_import' => 1,
                   'remark' => $remark,
                   'id_address' => $id_address,
-                  'id_sender' => empty(trim($rs['W'])) ? NULL : $this->sender_model->get_id(trim($rs['W'])),
-                  'force_update' => $rs['S'] == 1 ? TRUE : FALSE,
+                  'id_sender' => empty(trim($rs['W'] ?? '')) ? NULL : $this->sender_model->get_id(trim($rs['W'] ?? '')),
+                  'force_update' => ($rs['S'] ?? '') == 1 ? TRUE : FALSE,
                   'hold' => $hold,
                   'tax_status' => $tax_status,
                   'tax_type' => $tax_status ? $tax_type : NULL,
@@ -1060,7 +1057,7 @@ class Import_order extends CI_Controller
             else
             {
               //--- check item cache
-              $item_code = trim($rs['M']);
+              $item_code = trim($rs['M'] ?? '');
 
               if( ! isset($itemsCache[$item_code]))
               {
@@ -1084,16 +1081,16 @@ class Import_order extends CI_Controller
 
               $item = $itemsCache[$item_code];
 
-              $qty = empty(trim($rs['N'])) ? 1 : str_replace(',', '', $rs['N']);
+              $qty = empty(trim($rs['N'] ?? '')) ? 1 : str_replace(',', '', $rs['N'] ?? '');
               $qty = is_numeric($qty) ? $qty : 1;
 
               //--- ราคา (เอาราคาที่ใส่มา / จำนวน + ส่วนลดต่อชิ้น)
-              $price = empty($rs['O']) ? 0.00 : str_replace(",", "", $rs['O']); //--- ราคารวมไม่หักส่วนลด
+              $price = empty($rs['O'] ?? '') ? 0.00 : str_replace(",", "", $rs['O'] ?? ''); //--- ราคารวมไม่หักส่วนลด
               $price = is_numeric($price) ? $price : 0;
               $price = $price > 0 ? ($price/$qty) : 0; //--- ราคาต่อชิ้น
 
               //--- ส่วนลด (รวม)
-              $discount_amount = empty(trim($rs['P'])) ? 0.00 : str_replace(',', '', trim($rs['P']));
+              $discount_amount = empty(trim($rs['P'] ?? '')) ? 0.00 : str_replace(',', '', trim($rs['P'] ?? ''));
               $discount_amount = is_numeric($discount_amount) ? $discount_amount : 0;
 
               //--- ส่วนลด (ต่อชิ้น)
@@ -1191,5 +1188,3 @@ class Import_order extends CI_Controller
     return $new_code;
   }
 }
-
- ?>

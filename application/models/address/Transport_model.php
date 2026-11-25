@@ -11,6 +11,7 @@ class Transport_model extends CI_Model
   {
     $sd = 0;
     $rs = $this->db->where('customer_code', $code)->get('address_transport');
+
     if($rs->num_rows() == 1)
     {
       $sd += 1;
@@ -26,6 +27,7 @@ class Transport_model extends CI_Model
   public function get_sender($id)
   {
     $rs = $this->db->where('id', $id)->get('address_sender');
+
     if($rs->num_rows() === 1)
     {
       return $rs->row();
@@ -38,6 +40,7 @@ class Transport_model extends CI_Model
   public function get_senders($code)
   {
     $rs = $this->db->where('customer_code', $code)->get('address_transport');
+
     if($rs->num_rows() === 1)
     {
       return $rs->row();
@@ -50,6 +53,7 @@ class Transport_model extends CI_Model
   public function get_name($id)
   {
     $rs = $this->db->where('id', $id)->get('address_sender');
+
     if($rs->num_rows() === 1)
     {
       return $rs->row()->name;
@@ -62,6 +66,7 @@ class Transport_model extends CI_Model
   public function get_id($code)
   {
     $rs = $this->db->select('main_sender')->where('customer_code', $code)->get('address_transport');
+
     if($rs->num_rows() === 1)
     {
       return $rs->row()->main_sender;
@@ -69,6 +74,4 @@ class Transport_model extends CI_Model
 
     return FALSE;
   }
-
 }
- ?>

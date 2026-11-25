@@ -15,20 +15,17 @@ function generateEAN($ean){
   $mirror=array("000000","001011","001101","001110","010011","011001","011100","010101","010110","011010");
   $guards=array("9a1a","1a1a1","a1a");
 
-  $ean=trim($ean);
-  if (preg_match("#[^0-9]#i",$ean)){
+  $ean=trim($ean ?? '');
+  if (preg_match("#[^0-9]#i",$ean ?? '')){
     die("Invalid EAN-Code");
   }
 
-  if (strlen($ean)<12 || strlen($ean)>13){
+  if (strlen($ean ?? '')<12 || strlen($ean ?? '')>13){
     die("Invalid EAN13 Code (must have 12/13 numbers)");
   }
 
-  $ean=substr($ean,0,12);
-  $eansum=ean_checkdigit($ean);
+  $ean=substr($ean ?? '',0,12);
+  $eansum=ean_checkdigit($ean ?? '');
   $ean.=$eansum;
   return $ean;
 }
-
-
- ?>

@@ -14,8 +14,6 @@ class Sender extends PS_Controller{
 		$this->load->model('masters/sender_model');
   }
 
-
-
   public function index()
   {
 		$filter = array(
@@ -26,29 +24,15 @@ class Sender extends PS_Controller{
 			'type' => get_filter('type', 'sender_type', 'all')
 		);
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
+		$perpage = get_rows();
+		$segment = 4;
 		$rows = $this->sender_model->count_rows($filter);
-
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-
 		$rs = $this->sender_model->get_list($filter, $perpage, $this->uri->segment($segment));
 		$filter['data'] = $rs;
-
+		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$this->pagination->initialize($init);
     $this->load->view('masters/sender/sender_view', $filter);
   }
-
-
-
 
 
 	public function add_new()
@@ -57,13 +41,11 @@ class Sender extends PS_Controller{
 	}
 
 
-
 	public function add()
 	{
 		$sc = TRUE;
-
-		$code = trim($this->input->post('code'));
-		$name = trim($this->input->post('name'));
+		$code = trim($this->input->post('code') ?? '');
+		$name = trim($this->input->post('name') ?? '');
 
 		if($code !== NULL && $code !== "")
 		{
@@ -77,12 +59,12 @@ class Sender extends PS_Controller{
 						$arr = array(
 							'code' => $code,
 							'name' => $name,
-							'address1' => get_null(trim($this->input->post('address1'))),
-							'address2' => get_null(trim($this->input->post('address2'))),
-							'phone' => get_null(trim($this->input->post('phone'))),
-							'open' => trim($this->input->post('open')),
-							'close' => trim($this->input->post('close')),
-							'type' => trim($this->input->post('type')),
+							'address1' => get_null(trim($this->input->post('address1') ?? '')),
+							'address2' => get_null(trim($this->input->post('address2') ?? '')),
+							'phone' => get_null(trim($this->input->post('phone') ?? '')),
+							'open' => trim($this->input->post('open') ?? ''),
+							'close' => trim($this->input->post('close') ?? ''),
+							'type' => trim($this->input->post('type') ?? ''),
 							'show_in_list' => empty($this->input->post('show_in_list')) ? 0 : 1,
 							'force_tracking' => empty($this->input->post('force_tracking')) ? 0 : 1,
 							'auto_gen' => empty($this->input->post('auto_gen')) ? 0 :1,
@@ -130,12 +112,12 @@ class Sender extends PS_Controller{
 		$this->load->view('masters/sender/sender_edit', $rs);
 	}
 
+
 	public function update($id)
 	{
 		$sc = TRUE;
-
-		$code = trim($this->input->post('code'));
-		$name = trim($this->input->post('name'));
+		$code = trim($this->input->post('code') ?? '');
+		$name = trim($this->input->post('name') ?? '');
 
 		if($code !== NULL && $code !== "")
 		{
@@ -149,16 +131,16 @@ class Sender extends PS_Controller{
 						$arr = array(
 							'code' => $code,
 							'name' => $name,
-							'address1' => get_null(trim($this->input->post('address1'))),
-							'address2' => get_null(trim($this->input->post('address2'))),
-							'phone' => get_null(trim($this->input->post('phone'))),
-							'open' => trim($this->input->post('open')),
-							'close' => trim($this->input->post('close')),
-							'type' => trim($this->input->post('type')),
+							'address1' => get_null(trim($this->input->post('address1') ?? '')),
+							'address2' => get_null(trim($this->input->post('address2') ?? '')),
+							'phone' => get_null(trim($this->input->post('phone') ?? '')),
+							'open' => trim($this->input->post('open') ?? ''),
+							'close' => trim($this->input->post('close') ?? ''),
+							'type' => trim($this->input->post('type') ?? ''),
 							'show_in_list' => empty($this->input->post('show_in_list')) ? 0 : 1,
 							'force_tracking' => empty($this->input->post('force_tracking')) ? 0 : 1,
 							'auto_gen' => empty($this->input->post('auto_gen')) ? 0 :1,
-							'prefix' => get_null(trim($this->input->post('prefix')))
+							'prefix' => get_null(trim($this->input->post('prefix') ?? ''))
 						);
 
 						if(! $this->sender_model->update($id, $arr))
@@ -196,8 +178,6 @@ class Sender extends PS_Controller{
 	}
 
 
-
-
 	public function delete($id)
 	{
 		if($this->pm->can_delete)
@@ -220,15 +200,9 @@ class Sender extends PS_Controller{
 	}
 
 
-
-
 	public function clear_filter()
 	{
 		$filter = array('sender_code', 'sender_name', 'sender_addr', 'sender_phone', 'sender_type');
 		clear_filter($filter);
 	}
-
-}//--- end class
-
-
- ?>
+}

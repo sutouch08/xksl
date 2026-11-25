@@ -7,8 +7,7 @@ class Support extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'REQUEST';
 	public $title = 'เบิกอภินันท์';
-  public $filter;
-
+  
   public function __construct()
   {
     parent::__construct();
@@ -62,7 +61,6 @@ class Support extends PS_Controller
     );
 
     $state_list = array();
-
     $button = array();
 
     for($i =1; $i <= 9; $i++)
@@ -79,8 +77,6 @@ class Support extends PS_Controller
     $button['not_save'] = empty($filter['notSave']) ? '' : 'btn-info';
     $button['only_me'] = empty($filter['onlyMe']) ? '' : 'btn-info';
     $button['is_expire'] = empty($filter['isExpire']) ? '' : 'btn-info';
-
-
     $filter['state_list'] = empty($state_list) ? NULL : $state_list;
 
 		//--- แสดงผลกี่รายการต่อหน้า
@@ -91,20 +87,21 @@ class Support extends PS_Controller
 			$perpage = 20;
 		}
 
-    $role     = 'U'; //--- U = เบิกอภินันท์;
-		$segment  = 4; //-- url segment
-		$rows     = $this->orders_model->count_rows($filter, $role);
+    $role = 'U'; //--- U = เบิกอภินันท์;
+		$segment = 4; //-- url segment
+		$rows = $this->orders_model->count_rows($filter, $role);
 		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), $role);
-    $ds       = array();
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$orders = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), $role);
+    $ds = array();
+
     if(!empty($orders))
     {
       foreach($orders as $rs)
       {
         $rs->customer_name = empty($rs->customer_name) ? $this->customers_model->get_name($rs->customer_code) : $rs->customer_name;
         $rs->total_amount  = $rs->doc_total <= 0 ? $this->orders_model->get_order_total_amount($rs->code) : $rs->doc_total;
-        $rs->state_name    = get_state_name($rs->state);
+        $rs->state_name = get_state_name($rs->state);
         $ds[] = $rs;
       }
     }
@@ -144,22 +141,15 @@ class Support extends PS_Controller
   public function add()
   {
     $sc = TRUE;
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
 			$this->load->model('masters/warehouse_model');
-
       $book_code = getConfig('BOOK_CODE_SUPPORT');
-
       $date_add = db_date($data->date_add);
-
       $code = $this->get_new_code($date_add);
-
-      $role = 'U'; //--- U = เบิกอภินันท์
-
-      $has_term = 1; //--- ถือว่าเป็นเครดิต
-
+      $role = 'U'; //--- U = เบิกอภินันท์   
 			$wh = $this->warehouse_model->get($data->warehouse_code);
 
       if( ! empty($wh))
@@ -232,7 +222,6 @@ class Support extends PS_Controller
       $rs->user          = $this->user_model->get_name($rs->user);
       $rs->state_name    = get_state_name($rs->state);
 
-
       $state = $this->order_state_model->get_order_state($code);
       $ost = array();
       if(!empty($state))
@@ -270,12 +259,11 @@ class Support extends PS_Controller
   {
     $sc = TRUE;
 
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
       $code = $data->code;
-
 			$order = $this->orders_model->get($code);
 
 			if(! empty($order))
@@ -346,6 +334,7 @@ class Support extends PS_Controller
     $this->load->helper('product_tab');
     $ds = array();
     $rs = $this->orders_model->get($code);
+
     if($rs->state <= 3)
     {
       $rs->customer_name = $this->customers_model->get_name($rs->customer_code);
@@ -516,4 +505,3 @@ class Support extends PS_Controller
     clear_filter($filter);
   }
 }
-?>

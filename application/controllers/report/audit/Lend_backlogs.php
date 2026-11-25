@@ -1,12 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Lend_backlogs extends PS_Controller
 {
   public $menu_code = 'RALNBL';
 	public $menu_group_code = 'RE';
   public $menu_sub_group_code = 'REAUDIT';
 	public $title = 'รายงานสินค้ายืมยังไม่คืน';
-  public $filter;
+  
   public function __construct()
   {
     parent::__construct();
@@ -105,11 +108,13 @@ class Lend_backlogs extends PS_Controller
 		echo json_encode($ds);
 	}
 
+
   public function do_export()
   {
-    ini_set('memory_limit','2048M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
-    ini_set('sqlsrv.ClientBufferMaxKBSize','2097152'); // Setting to 2048M
-    ini_set('sqlsrv.client_buffer_max_kb_size','2097152'); // Setting to 512M - for pdo_sqlsrv
+    ini_set('memory_limit','2048M');
+		ini_set('max_execution_time', 600);
+    ini_set('sqlsrv.ClientBufferMaxKBSize','2097152');
+    ini_set('sqlsrv.client_buffer_max_kb_size','2097152');
     
 		$allEmp = $this->input->post('allEmp');
 		$empId = $this->input->post('empId');
@@ -141,48 +146,46 @@ class Lend_backlogs extends PS_Controller
 
     $data = $this->lend_backlogs_model->get_data($arr);
 
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Lend backlogs Report');
+    $excel = new Spreadsheet();
+		$sheet = $excel->getActiveSheet();
+		$sheet->setTitle('Lend backlogs Report');
 
     //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', $report_title);
-    $this->excel->getActiveSheet()->mergeCells('A1:K1');
-    $this->excel->getActiveSheet()->setCellValue('A2', $emp_title);
-    $this->excel->getActiveSheet()->mergeCells('A2:K2');
-    $this->excel->getActiveSheet()->setCellValue('A3', $pd_title);
-    $this->excel->getActiveSheet()->mergeCells('A3:K3');
-    $this->excel->getActiveSheet()->setCellValue('A4', $date_title);
-    $this->excel->getActiveSheet()->mergeCells('A4:K4');
+    $sheet->setCellValue('A1', $report_title);
+    $sheet->mergeCells('A1:K1');
+    $sheet->setCellValue('A2', $emp_title);
+    $sheet->mergeCells('A2:K2');
+    $sheet->setCellValue('A3', $pd_title);
+    $sheet->mergeCells('A3:K3');
+    $sheet->setCellValue('A4', $date_title);
+    $sheet->mergeCells('A4:K4');
 
     //--- set Table header
 		$row = 5;
 
-    $this->excel->getActiveSheet()->setCellValue('A'.$row, '#');
-    $this->excel->getActiveSheet()->setCellValue('B'.$row, 'ผู้ยืม');
-    $this->excel->getActiveSheet()->setCellValue('C'.$row, 'ผู้รับ');
-    $this->excel->getActiveSheet()->setCellValue('D'.$row, 'ผู้ทำรายการ');
-    $this->excel->getActiveSheet()->setCellValue('E'.$row, 'เลขที่เอกสาร');
-    $this->excel->getActiveSheet()->setCellValue('F'.$row, 'รหัสสินค้า');
-    $this->excel->getActiveSheet()->setCellValue('G'.$row, 'ราคา');
-    $this->excel->getActiveSheet()->setCellValue('H'.$row, 'ยืม');
-    $this->excel->getActiveSheet()->setCellValue('I'.$row, 'คืน');
-    $this->excel->getActiveSheet()->setCellValue('J'.$row, 'คงค้าง');
-    $this->excel->getActiveSheet()->setCellValue('K'.$row, 'มูลค่าคงค้าง');
+    $sheet->setCellValue('A'.$row, '#');
+    $sheet->setCellValue('B'.$row, 'ผู้ยืม');
+    $sheet->setCellValue('C'.$row, 'ผู้รับ');
+    $sheet->setCellValue('D'.$row, 'ผู้ทำรายการ');
+    $sheet->setCellValue('E'.$row, 'เลขที่เอกสาร');
+    $sheet->setCellValue('F'.$row, 'รหัสสินค้า');
+    $sheet->setCellValue('G'.$row, 'ราคา');
+    $sheet->setCellValue('H'.$row, 'ยืม');
+    $sheet->setCellValue('I'.$row, 'คืน');
+    $sheet->setCellValue('J'.$row, 'คงค้าง');
+    $sheet->setCellValue('K'.$row, 'มูลค่าคงค้าง');
 
     //---- กำหนดความกว้างของคอลัมภ์
-    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(30);
-    $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
-    $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
-    $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(15);
-    $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(15);
-    $this->excel->getActiveSheet()->getColumnDimension('K')->setWidth(15);
+    $sheet->getColumnDimension('B')->setWidth(20);
+    $sheet->getColumnDimension('C')->setWidth(20);
+    $sheet->getColumnDimension('D')->setWidth(20);
+    $sheet->getColumnDimension('E')->setWidth(20);
+    $sheet->getColumnDimension('F')->setWidth(30);
+    $sheet->getColumnDimension('G')->setWidth(15);
+    $sheet->getColumnDimension('H')->setWidth(15);
+    $sheet->getColumnDimension('I')->setWidth(15);
+    $sheet->getColumnDimension('J')->setWidth(15);
+    $sheet->getColumnDimension('K')->setWidth(15);
 
 		$row++;
 
@@ -193,17 +196,17 @@ class Lend_backlogs extends PS_Controller
 
       foreach($data as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->empName);
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->user_ref);
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->user_name);
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->order_code);
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->price);
-        $this->excel->getActiveSheet()->setCellValue('H'.$row, $rs->qty);
-        $this->excel->getActiveSheet()->setCellValue('I'.$row, $rs->receive);
-        $this->excel->getActiveSheet()->setCellValue('J'.$row, $rs->balance);
-        $this->excel->getActiveSheet()->setCellValue('K'.$row, ($rs->balance * $rs->price));
+        $sheet->setCellValue('A'.$row, $no);
+        $sheet->setCellValue('B'.$row, $rs->empName);
+        $sheet->setCellValue('C'.$row, $rs->user_ref);
+        $sheet->setCellValue('D'.$row, $rs->user_name);
+        $sheet->setCellValue('E'.$row, $rs->order_code);
+        $sheet->setCellValue('F'.$row, $rs->product_code);
+        $sheet->setCellValue('G'.$row, $rs->price);
+        $sheet->setCellValue('H'.$row, $rs->qty);
+        $sheet->setCellValue('I'.$row, $rs->receive);
+        $sheet->setCellValue('J'.$row, $rs->balance);
+        $sheet->setCellValue('K'.$row, ($rs->balance * $rs->price));
 
         $no++;
         $row++;
@@ -212,31 +215,20 @@ class Lend_backlogs extends PS_Controller
 
 		$re = $row - 1;
 
-		$this->excel->getActiveSheet()->setCellValue("A{$row}", 'รวม');
-		$this->excel->getActiveSheet()->mergeCells("A{$row}:G{$row}");
-		$this->excel->getActiveSheet()->getStyle("A{$row}")->getAlignment()->setHorizontal('right');
+		$sheet->setCellValue("A{$row}", 'รวม');
+		$sheet->mergeCells("A{$row}:G{$row}");
+		$sheet->getStyle("A{$row}")->getAlignment()->setHorizontal('right');
 
-		$this->excel->getActiveSheet()->setCellValue("H{$row}", "=SUM(H6:H{$re})");
-		$this->excel->getActiveSheet()->setCellValue("I{$row}", "=SUM(I6:I{$re})");
-		$this->excel->getActiveSheet()->setCellValue("J{$row}", "=SUM(J6:J{$re})");
-		$this->excel->getActiveSheet()->setCellValue("K{$row}", "=SUM(K6:K{$re})");
+		$sheet->setCellValue("H{$row}", "=SUM(H6:H{$re})");
+		$sheet->setCellValue("I{$row}", "=SUM(I6:I{$re})");
+		$sheet->setCellValue("J{$row}", "=SUM(J6:J{$re})");
+		$sheet->setCellValue("K{$row}", "=SUM(K6:K{$re})");
 
     setToken($token);
     $file_name = "Lend_backlogs_".date('dmY').".xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
-
   }
-
-} //--- end class
-
-
-
-
-
-
-
-
- ?>
+}

@@ -1,10 +1,11 @@
 <?php
 function select_product_category($code = '')
 {
-  $CI =& get_instance();
-  $CI->load->model('masters/product_category_model');
-  $result = $CI->product_category_model->get_data();
+  $ci =& get_instance();
+  $ci->load->model('masters/product_category_model');
+  $result = $ci->product_category_model->get_data();
   $ds = '';
+  
   if(!empty($result))
   {
     foreach($result as $rs)
@@ -15,6 +16,3 @@ function select_product_category($code = '')
 
   return $ds;
 }
-
-
- ?>

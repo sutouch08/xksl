@@ -22,11 +22,9 @@ class Product_size extends PS_Controller
       'code' => get_filter('code', 'size_code', ''),
       'name' => get_filter('name', 'size_name', '')
     );
-
-		//--- แสดงผลกี่รายการต่อหน้า
+		
 		$perpage = get_rows();
-
-		$segment = 4; //-- url segment
+    $segment = 4;
 
     if($this->input->post('search'))
     {
@@ -35,7 +33,6 @@ class Product_size extends PS_Controller
     else
     {
       $rows = $this->product_size_model->count_rows($filter);
-      //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
       $init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
       $size = $this->product_size_model->get_list($filter, $perpage, $this->uri->segment($segment));
 
@@ -47,9 +44,7 @@ class Product_size extends PS_Controller
         }
       }
 
-
       $filter['data'] = $size;
-
   		$this->pagination->initialize($init);
       $this->load->view('masters/product_size/product_size_list', $filter);
     }
@@ -136,7 +131,7 @@ class Product_size extends PS_Controller
     $sc = TRUE;
     $id = $this->input->post('id');
     $code = $this->input->post('code');
-    $name = trim($this->input->post('name'));
+    $name = trim($this->input->post('name') ?? '');
     $pos = $this->input->post('position');
 
     if( ! empty($id) && $code != '' && $name != '')
@@ -271,10 +266,6 @@ class Product_size extends PS_Controller
   public function clear_filter()
 	{
 		$filter = array('size_code', 'size_name');
-    clear_filter($filter);
-		echo 'done';
+    clear_filter($filter);	
 	}
-
-
-}//--- end class
- ?>
+}

@@ -33,17 +33,12 @@ class Customers extends PS_Controller
       'area' => get_filter('area', 'cu_area', 'all'),
       'status' => get_filter('status', 'cu_status', 'all')
     );
-
-		//--- แสดงผลกี่รายการต่อหน้า
+		  
 		$perpage = get_rows();
-
 		$rows = $this->customers_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 		$customers = $this->customers_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
-
     $filter['data'] = $customers;
-
 		$this->pagination->initialize($init);
     $this->load->view('masters/customers/customers_view', $filter);
   }
@@ -475,8 +470,7 @@ class Customers extends PS_Controller
         'CardType' => $cs->CardType,
         'GroupCode' => $cs->GroupCode,
         'CmpPrivate' => $cs->cmpPrivate,
-        'SlpCode' => $cs->sale_code,
-        //'SlpName' => $this->slp_model->get_name($cs->sale_code),
+        'SlpCode' => $cs->sale_code,        
         'Currency' => getConfig('CURRENCY'),
         'GroupNum' => $cs->GroupNum,
         'VatStatus' => 'Y',
@@ -676,7 +670,4 @@ class Customers extends PS_Controller
     $rs = $this->address_model->delete_shipping_address($id);
     echo $rs === TRUE ? 'success' : 'fail';
   }
-
-} //---
-
-?>
+}

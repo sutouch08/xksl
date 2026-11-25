@@ -6,9 +6,7 @@ class Consign_check extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = '';
 	public $title = 'กระทบยอดสินค้า';
-  public $filter;
-  public $error;
-
+ 
   public function __construct()
   {
     parent::__construct();
@@ -696,10 +694,7 @@ class Consign_check extends PS_Controller
     $sc = TRUE;
 
     if($this->pm->can_delete)
-    {
-      $reason = $this->input->post('reason');
-      $force = $this->input->post('force_cancel') == 1 ? TRUE : FALSE;
-
+    {     
       $doc = $this->consign_check_model->get($code);
 
       if($doc->status != 2)
@@ -711,7 +706,7 @@ class Consign_check extends PS_Controller
           {
             $arr = array(
               'status' => 2,
-              'cancle_reason' => trim($this->input->post('reason')),
+              'cancle_reason' => trim($this->input->post('reason') ?? ''),
               'cancle_user' => $this->_user->uname
             );
 

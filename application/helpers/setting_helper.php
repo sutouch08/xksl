@@ -1,5 +1,5 @@
 <?php
-function select_running($min = 3, $max = 6, $se = NULL)
+function select_running($min = 3, $max = 6, $se = '')
 {
   $option = "";
   $se = intval($se);
@@ -12,5 +12,3 @@ function select_running($min = 3, $max = 6, $se = NULL)
 
   return $option;
 }
-
- ?>

@@ -2,11 +2,10 @@
 
 function productTabMenu($mode = 'order')
 {
-	$CI =& get_instance();
+	$ci =& get_instance();
 	$ajax = $mode == 'order' ? 'getOrderTabs' : ($mode == 'sale' ? 'getSaleOrderTabs' : 'getViewTabs');
 	$sc = '';
-	$qr = "SELECT * FROM product_tab WHERE id_parent = 0";
-	$qs = $CI->db->query($qr);
+	$qs = $ci->db->where('id_parent', 0)->get('product_tab');
 
 	foreach( $qs->result() as $rs)
 	{
@@ -28,8 +27,8 @@ function productTabMenu($mode = 'order')
 			$sc .= '<li class="menu" style="min-width:100px; float:left;"><a href="#cat-'.$rs->id.'" role="tab" data-toggle="tab" onClick="'.$ajax.'(\''.$rs->id.'\')">'.$rs->name.'</a></li>';
 		}
 	}
-	return $sc;
 
+	return $sc;
 }
 
 //-- this function to view category product in order page
@@ -37,7 +36,7 @@ function getSubTab($parent, $ajax)
 {
 	$ci =& get_instance();
 	$sc = '';
-	$qs = $ci->db->query("SELECT * FROM product_tab WHERE id_parent = ".$parent." ORDER BY name ASC");
+	$qs = $ci->db->where('id_parent', $parent)->order_by('name', 'ASC')->get('product_tab');
 
 	if( $qs->num_rows() > 0 )
 	{
@@ -60,6 +59,7 @@ function getSubTab($parent, $ajax)
 
 		}
 	}
+
 	return $sc;
 }
 
@@ -69,7 +69,7 @@ function getSubCategoryTab($parent, $ajax)
 {
 	$ci =& get_instance();
 	$sc = '';
-	$qs = $ci->db->query("SELECT * FROM product_tab WHERE id_parent = ".$parent);
+	$qs = $ci->db->where('id_parent', $parent)->get('product_tab');
 
 	if( $qs->num_rows() > 0 )
 	{
@@ -92,6 +92,7 @@ function getSubCategoryTab($parent, $ajax)
 
 		}
 	}
+
 	return $sc;
 }
 
@@ -101,7 +102,8 @@ function getProductTabs()
 {
 	$ci =& get_instance();
 	$sc = '';
-	$qs = $ci->db->query("SELECT * FROM product_tab WHERE id != 0");
+	$qs = $ci->db->where('id !=', 0)->get('product_tab');
+
 	foreach($qs->result() as $rs)
 	{
 		$sc .= '<div class="tab-pane" id="cat-'.$rs->id.'"></div>';
@@ -116,10 +118,12 @@ function getProductTabs()
 function selectLevel($level = '' )
 {
 	$sc = '<option value="">ทั้งหมด</option>';
+
 	for( $i = 1; $i <= 5; $i++ )
 	{
 		$sc .= '<option value="'.$i.'" ' . isSelected($i, $level) . '>' . $i . '</option>';
 	}
+
 	return $sc;
 }
 
@@ -131,9 +135,11 @@ function parentIn($txt)
 	$sc = -1;
 	$qs = $ci->product_tab_model->getSearchResult($txt);
 	$i = 1;
+
 	if( $qs->num_rows() > 0 )
 	{
 		$sc = '';
+
 		foreach( $qs->result() as $rs )
 		{
 			$sc .= $i == 1 ? $rs->id : ", ".$rs->id;
@@ -145,8 +151,7 @@ function parentIn($txt)
 
 
 function getTabsTree($id = 0, $script = TRUE)
-{
-	$uid = uniqid();
+{	
 	$cs =& get_instance();
 	$sc	= '<ul class="tree">';
 	$sc .= '<li>';
@@ -156,8 +161,9 @@ function getTabsTree($id = 0, $script = TRUE)
 	$sc .= '<span class="lbl">  TOP LEVEL</span>';
 	$sc .= '</label>';
 	$sc .= '<ul id="catchild-0">';
-	$qs  = $cs->db->query("SELECT * FROM product_tab WHERE id_parent = 0");
+	$qs  = $cs->db->where('id_parent', 0)->get('product_tab');
 	$i = 1;
+
 	foreach( $qs->result() as $rs )
 	{
 		$sc .= '<li class="'. ($i == 1 ? '' : 'margin-top-15').'">';
@@ -184,8 +190,10 @@ function getTabsTree($id = 0, $script = TRUE)
 		}//---- has sub cate
 		$sc .= '</li>';
 	}
-	$sc 	.= '</ul></li>';
+
+	$sc .= '</ul></li>';
 	$sc	.= '</ul>';
+
 	if( $script === TRUE)
 	{
 		$sc .= '<script>';
@@ -204,6 +212,7 @@ function getTabsTree($id = 0, $script = TRUE)
 		$sc .= '}';
 		$sc .= '</script>';
 	}
+
 	return $sc;
 }
 
@@ -224,8 +233,9 @@ function getEditTabsTree($id, $script = TRUE)
 	$sc .= '<span class="lbl">TOP LEVEL</span>';
 	$sc .= '</label>';
 	$sc .= '<ul id="edit-catchild-0">';
-	$qs  = $cs->db->query("SELECT * FROM product_tab WHERE id_parent = 0");
+	$qs  = $cs->db->where('id_parent', 0)->get('product_tab');
 	$i   = 1;
+
 	foreach( $qs->result() as $rs )
 	{
 		if( $rs->id != $id )
@@ -255,8 +265,9 @@ function getEditTabsTree($id, $script = TRUE)
 			$sc .= '</li>';
 		}
 	}
-	$sc 	.= '</ul></li>';
+	$sc .= '</ul></li>';
 	$sc	.= '</ul>';
+
 	if( $script === TRUE)
 	{
 		$sc .= '<script>';
@@ -275,34 +286,35 @@ function getEditTabsTree($id, $script = TRUE)
 		$sc .= '}';
 		$sc .= '</script>';
 	}
+
 	return $sc;
 }
-
-
 
 function hasChild($id)
 {
 	$sc = FALSE;
 	$ci =& get_instance();
-	$qs = $ci->db->query("SELECT id FROM product_tab WHERE id_parent = ".$id);
+	$qs = $ci->db->select('id')->where('id_parent', $id)->get('product_tab');
+
 	if( $qs->num_rows() > 0 )
 	{
 		$sc = TRUE;
 	}
+
 	return $sc;
 }
-
-
 
 function hasEditChild($id, $id_tab)
 {
 	$sc = FALSE;
 	$ci =& get_instance();
-	$qs = $ci->db->query("SELECT id FROM product_tab WHERE id_parent = ".$id." AND id != ".$id_tab);
+	$qs = $ci->db->select('id')->where('id_parent', $id)->where('id !=', $id_tab)->get('product_tab');
+
 	if( $qs->num_rows() > 0 )
 	{
 		$sc = TRUE;
 	}
+
 	return $sc;
 }
 
@@ -312,10 +324,10 @@ function getChild($id_parent, $id )
 {
 	$sc = '';
 	$ci =& get_instance();
-	$qs = $ci->db->query("SELECT * FROM product_tab WHERE id_parent = ".$id_parent);
+	$qs = $ci->db->where('id_parent', $id_parent)->get('product_tab');
+
 	if( $qs->num_rows() > 0 )
 	{
-
 		foreach( $qs->result() as $rs)
 		{
 				$sc .= '<li>';
@@ -341,6 +353,7 @@ function getChild($id_parent, $id )
 			$sc .= '</li>';
 		}
 	}
+
 	return $sc;
 }
 
@@ -350,10 +363,10 @@ function getEditChild($id_parent, $parent, $id, $id_tab )
 {
 	$sc = '';
 	$ci =& get_instance();
-	$qs = $ci->db->query("SELECT * FROM product_tab WHERE id_parent = ".$id_parent);
+	$qs = $ci->db->where('id_parent', $id_parent)->get('product_tab');
+
 	if( $qs->num_rows() > 0 )
 	{
-
 		foreach( $qs->result() as $rs)
 		{
 			if( $rs->id != $id_tab )
@@ -364,7 +377,6 @@ function getEditChild($id_parent, $parent, $id, $id_tab )
 				//----- Next Level
 				if( hasEditChild($rs->id, $id_tab) === TRUE )
 				{
-
 					$sc .= '<i class="fa fa-'.$ep.'-square-o" id="edit-catbox-'.$rs->id.'" onClick="toggleEditTree('.$rs->id.')"></i>';
 					$sc .= '<label class="padding-10">';
 					$sc .= '<input type="radio" class=" ace margin-right-10" name="tabs" value="'.$rs->id.'" '. is_checked($id, $rs->id) .' />';
@@ -381,14 +393,14 @@ function getEditChild($id_parent, $parent, $id, $id_tab )
 					$sc .= '<span class="lbl">'.$rs->name. '</span>';
 					$sc .= '</label>';
 				}//---- if has Child
+
 				$sc .= '</li>';
 			}
 		}//--- end while
 	}//-- endif
+
 	return $sc;
 }
-
-
 
 function productTabsTree($style_code = '', $script = TRUE)
 {
@@ -405,8 +417,10 @@ function productTabsTree($style_code = '', $script = TRUE)
 	$sc 	.= '<i class="fa fa-minus-square-o" id="catbox-0" onClick="toggleTree(0)"></i>';
 	$sc 	.= '<label class="padding-10"> TOP LEVEL </label>';
 	$sc 	.= '<ul id="catchild-0">';
-	$qs = $cs->db->query("SELECT * FROM product_tab WHERE id_parent = 0");
+
+	$qs = $cs->db->where('id_parent', 0)->get('product_tab');
 	$i = 1;
+
 	if($qs->num_rows() > 0)
 	{
 		foreach( $qs->result() as $rs )
@@ -434,12 +448,14 @@ function productTabsTree($style_code = '', $script = TRUE)
 									<input type="checkbox" class="ace margin-right-10" name="tabs[]" value="'.$rs->id.'" '. $is_checked .' />
 									<span class="lbl">'.$rs->name.'</span></label>';
 			}//---- has sub cate
+
 			$sc .= '</li>';
 		}
 	}
 
-	$sc 	.= '</ul></li>';
+	$sc .= '</ul></li>';
 	$sc	.= '</ul>';
+
 	if( $script === TRUE)
 	{
 		$sc .= '<script>';
@@ -466,10 +482,10 @@ function productTabChild($id_parent, $style_code, $parent, $se )
 {
 	$sc = '';
 	$ci =& get_instance();
-	$qs = $ci->db->query("SELECT * FROM product_tab WHERE id_parent = ".$id_parent);
+	$qs = $ci->db->where('id_parent', $id_parent)->get('product_tab');
+
 	if( $qs->num_rows() > 0 )
 	{
-
 		foreach( $qs->result() as $rs)
 		{
 				$sc .= '<li>';
@@ -477,6 +493,7 @@ function productTabChild($id_parent, $style_code, $parent, $se )
 				$ex = isset( $parent[$rs->id] ) ? '' : 'hide';
 				$ep = isset( $parent[$rs->id] ) ? 'minus' : 'plus';
 				$is_checked = isset( $se[$rs->id] ) ? 'checked' : '';
+
 			if( hasChild($rs->id) === TRUE )
 			{
 				$sc .= '<i class="fa fa-'.$ep.'-square-o" id="catbox-'.$rs->id.'" onClick="toggleTree('.$rs->id.')"></i>';
@@ -497,22 +514,20 @@ function productTabChild($id_parent, $style_code, $parent, $se )
 			$sc .= '</li>';
 		}
 	}
+
 	return $sc;
 }
-
-
 
 function isInTab($style_code, $id_tab)
 {
 	$sc = FALSE;
 	$ci =& get_instance();
-	$qs = $ci->db->query("SELECT * FROM product_tab_style WHERE style_code = ".$style_code." AND id_tab = ".$id_tab);
+	$qs = $ci->db->where('style_code', $style_code)->where('id_tab', $id_tab)->get('product_tab_style');
+
 	if( $qs->num_rows() > 0 )
 	{
 		$sc = TRUE;
 	}
+
 	return $sc;
 }
-
-
-?>

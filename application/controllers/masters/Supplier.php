@@ -23,27 +23,16 @@ class Supplier extends PS_Controller
 			'phone' => get_filter('phone', 'sup_phone', ''),
 			'status' => get_filter('status', 'sup_status', 'all')
 		);
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-		$segment = 4; //-- url segment
-		$rows = $this->supplier_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		
+		$perpage = get_rows();		
+		$segment = 4;
+		$rows = $this->supplier_model->count_rows($filter);		
 		$supplier = $this->supplier_model->get_list($filter, $perpage, $this->uri->segment($segment));
-
 		$filter['data'] = $supplier;
-
+		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$this->pagination->initialize($init);
     $this->load->view('masters/supplier/supplier_list', $filter);
   }
-
 
 
 	public function add_new()
@@ -60,7 +49,7 @@ class Supplier extends PS_Controller
 		{
 			$ds = $this->input->post();
 
-			if($this->supplier_model->is_exists_code($ds['code']))
+			if($this->supplier_model->is_exists_code($ds['code'] ?? ''))
 			{
 				$sc = FALSE;
 				$this->error = "รหัสซ้ำ กรุณากำหนดรหัสใหม่";
@@ -68,12 +57,12 @@ class Supplier extends PS_Controller
 			else
 			{
 				$arr = array(
-					'code' => $ds['code'],
-					'name' => trim($ds['name']),
-					'address1' => get_null(trim($ds['address1'])),
-					'address2' => get_null(trim($ds['address2'])),
-					'phone' => get_null(trim($ds['phone'])),
-					'status' => trim($ds['active'])
+					'code' => $ds['code'] ?? '',
+					'name' => trim($ds['name'] ?? ''),
+					'address1' => get_null(trim($ds['address1'] ?? '')),
+					'address2' => get_null(trim($ds['address2'] ?? '')),
+					'phone' => get_null(trim($ds['phone'] ?? '')),
+					'status' => trim($ds['active'] ?? '')
 				);
 
 				if(!$this->supplier_model->add($arr))
@@ -113,11 +102,11 @@ class Supplier extends PS_Controller
 			$ds = $this->input->post();
 
 			$arr = array(
-				'name' => trim($ds['name']),
-				'address1' => trim($ds['address1']),
-				'address2' => get_null(trim($ds['address2'])),
-				'phone' => get_null(trim($ds['phone'])),
-				'status' => trim($ds['status'])
+				'name' => trim($ds['name'] ?? ''),
+				'address1' => get_null(trim($ds['address1'] ?? '')),
+				'address2' => get_null(trim($ds['address2'] ?? '')),
+				'phone' => get_null(trim($ds['phone'] ?? '')),
+				'status' => trim($ds['status'] ?? '')
 			);
 
 			if(! $this->supplier_model->update($ds['id'], $arr))
@@ -164,9 +153,7 @@ class Supplier extends PS_Controller
   public function clear_filter()
 	{
 		$filter = array('sup_code', 'sup_name', 'sup_phone', 'sup_status');
-		clear_filter($filter);
-		echo 'done';
+		clear_filter($filter);		
 	}
 }
 
-?>

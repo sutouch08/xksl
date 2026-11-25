@@ -343,7 +343,7 @@ class WW extends REST_Controller
         'bookcode' => $bookcode,
         'from_warehouse' => $fWhs->code,
         'to_warehouse' => $tWhs->code,
-        'remark' => get_null(trim($data->remark)),
+        'remark' => get_null(trim($data->remark ?? '')),
         'user' => $this->user,
         'date_add' => $date_add,
         'status' => 1,
@@ -970,5 +970,4 @@ class WW extends REST_Controller
 
     return $new_code;
   }
-} //--- end class
-?>
+} 

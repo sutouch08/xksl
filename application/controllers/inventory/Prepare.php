@@ -119,7 +119,7 @@ class Prepare extends PS_Controller
 
   public function gen_pick_list()
   {
-    $ds = json_decode($this->input->post('data'));
+    $ds = json_decode($this->input->post('data') ?? '{}');
 
     $orders = [];
     $items = [];
@@ -596,8 +596,8 @@ class Prepare extends PS_Controller
   {
     $ds = array();
     $sc = TRUE;
-    $zone_code = trim($this->input->get('zone_code'));
-    $warehouse_code = trim($this->input->get('warehouse_code'));
+    $zone_code = trim($this->input->get('zone_code') ?? '');
+    $warehouse_code = trim($this->input->get('warehouse_code') ?? '');
 
     if($zone_code)
     {

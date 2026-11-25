@@ -7,9 +7,7 @@ class Lend extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'REQUEST';
 	public $title = 'เบิกยืมสินค้า';
-  public $filter;
-  public $error;
-
+  
   public function __construct()
   {
     parent::__construct();
@@ -261,7 +259,7 @@ class Lend extends PS_Controller
         if($order->state > 1)
         {
           $ds = array(
-            'remark' => get_null(trim($data->remark))
+            'remark' => get_null(trim($data->remark) ?? '')
           );
         }
         else
@@ -277,7 +275,7 @@ class Lend extends PS_Controller
               'date_add' => db_date($data->date_add),
               'user_ref' => $data->user_ref,
               'zone_code' => $data->zone_code,
-              'remark' => get_null(trim($data->remark)),
+              'remark' => get_null(trim($data->remark) ?? ''),
               'warehouse_code' => $wh->code,
   						'id_address' => NULL,
   						'id_sender' => NULL,

@@ -7,7 +7,7 @@ class Address extends PS_Controller
 	public $menu_group_code = 'DB';
   public $menu_sub_group_code = 'CUSTOMER';
 	public $title = 'ที่อยู่จัดส่ง';
-  public $filter;
+  
   public function __construct()
   {
     parent::__construct();
@@ -30,7 +30,6 @@ class Address extends PS_Controller
       echo 'noaddress';
     }
   }
-
 
 
   public function print_online_address($id, $code)
@@ -66,7 +65,6 @@ class Address extends PS_Controller
       $this->load->view('print/print_address_online_sheet', $ds);
     }
   }
-
 
 
   public function print_address_sheet($code, $customer_code, $id_address = '', $id_sender = '')
@@ -157,10 +155,4 @@ class Address extends PS_Controller
       }
     }
   }
-
-
-
-
-} //--- end class
-
-?>
+}

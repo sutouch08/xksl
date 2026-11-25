@@ -3,7 +3,7 @@ function getTransformProducts($transform_product, $state = 1, $is_expired = 0, $
 {
 	$sc = '';
 
-	if(!empty($transform_product))
+	if( ! empty($transform_product))
 	{
 		foreach($transform_product as $rs)
 		{
@@ -26,5 +26,3 @@ function getTransformProducts($transform_product, $state = 1, $is_expired = 0, $
 
 	return $sc;
 }
-
- ?>

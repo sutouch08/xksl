@@ -6,11 +6,11 @@ class Confirm_order
   protected $ci;
   public $error;
 
-	public function __construct()
-	{
+  public function __construct()
+  {
     // Assign the CodeIgniter super-object
-    $this->ci =& get_instance();
-	}
+    $this->ci = &get_instance();
+  }
 
 
   public function confirm($code, $uname = NULL)
@@ -28,37 +28,37 @@ class Confirm_order
 
     $order = $this->ci->orders_model->get($code);
 
-    if( ! empty($order))
+    if (! empty($order))
     {
-			$date_add = getConfig('ORDER_SOLD_DATE') == 'D' ? $order->date_add : now();
+      $date_add = getConfig('ORDER_SOLD_DATE') == 'D' ? $order->date_add : now();
 
-      if($order->role == 'T' OR $order->role == 'Q')
+      if ($order->role == 'T' or $order->role == 'Q')
       {
         $this->ci->load->model('inventory/transform_model');
       }
 
-      if($order->role == 'L')
+      if ($order->role == 'L')
       {
         $this->ci->load->model('inventory/lend_model');
       }
 
-      if($order->state == 7)
+      if ($order->state == 7)
       {
         $this->ci->db->trans_begin();
 
         //--- change state
-       $this->orders_model->change_state($code, 8);
+        $this->orders_model->change_state($code, 8);
 
-			 if(empty($order->shipped_date))
-			 {
-				 $this->ci->orders_model->update($code, array('shipped_date' => now())); //--- update shipped date
-			 }
+        if (empty($order->shipped_date))
+        {
+          $this->ci->orders_model->update($code, array('shipped_date' => now())); //--- update shipped date
+        }
 
         //--- add state event
         $arr = array(
           'order_code' => $code,
           'state' => 8,
-          'update_user' => $this->ci->('uname')
+          'update_user' => $uname
         );
 
         $this->ci->order_state_model->add_state($arr);
@@ -66,12 +66,12 @@ class Confirm_order
         //---- รายการทีรอการเปิดบิล
         $bill = $this->ci->delivery_order_model->get_bill_detail($code);
 
-        if( ! empty($bill))
+        if (! empty($bill))
         {
-          foreach($bill as $rs)
+          foreach ($bill as $rs)
           {
             //--- ถ้ามีรายการที่ไมสำเร็จ ออกจาก loop ทันที
-            if($sc === FALSE)
+            if ($sc === FALSE)
             {
               break;
             }
@@ -79,7 +79,7 @@ class Confirm_order
             //--- get prepare and qc
             $rs->qc = $this->ci->qc_model->get_sum_qty($code, $rs->product_code, $rs->id);
 
-            if($rs->qc > 0)
+            if ($rs->qc > 0)
             {
               //--- ถ้ายอดตรวจ น้อยกว่า หรือ เท่ากับ ยอดสั่ง ใช้ยอดตรวจในการตัด buffer
               //--- ถ้ายอดตวจ มากกว่า ยอดสั่ง ให้ใช้ยอดสั่งในการตัด buffer (บางทีอาจมีการแก้ไขออเดอร์หลังจากมีการตรวจสินค้าแล้ว)
@@ -88,13 +88,13 @@ class Confirm_order
               //--- ดึงข้อมูลสินค้าที่จัดไปแล้วตามสินค้า
               $buffers = $this->ci->buffer_model->get_details($code, $rs->product_code, $rs->id);
 
-              if( ! empty($buffers))
+              if (! empty($buffers))
               {
                 $no = 0;
 
-                foreach($buffers as $rm)
+                foreach ($buffers as $rm)
                 {
-                  if($sell_qty > 0)
+                  if ($sell_qty > 0)
                   {
                     //--- ถ้ายอดใน buffer น้อยกว่าหรือเท่ากับยอดสั่งซื้อ (แยกแต่ละโซน น้อยกว่าหรือเท่ากับยอดสั่ง (ซึ่งควรเป็นแบบนี้))
                     $buffer_qty = $rm->qty <= $sell_qty ? $rm->qty : $sell_qty;
@@ -105,7 +105,7 @@ class Confirm_order
                     //--- 1. ตัดยอดออกจาก buffer
                     //--- นำจำนวนติดลบบวกกลับเข้าไปใน buffer เพื่อตัดยอดให้น้อยลง
 
-                    if($this->ci->buffer_model->update($rm->order_code, $rm->product_code, $rm->zone_code, $qty, $rs->id) !== TRUE)
+                    if ($this->ci->buffer_model->update($rm->order_code, $rm->product_code, $rm->zone_code, $qty, $rs->id) !== TRUE)
                     {
                       $sc = FALSE;
                       $this->error = 'ปรับยอดใน buffer ไม่สำเร็จ';
@@ -126,7 +126,7 @@ class Confirm_order
                       'date_add' => $date_add
                     );
 
-                    if($this->ci->movement_model->add($arr) === FALSE)
+                    if ($this->ci->movement_model->add($arr) === FALSE)
                     {
                       $sc = FALSE;
                       $message = 'บันทึก movement ขาออกไม่สำเร็จ';
@@ -152,7 +152,7 @@ class Confirm_order
                       'discount_amount' => ($rs->discount_amount * $buffer_qty),
                       'total_amount'   => $rs->final_price * $buffer_qty,
                       'total_cost'   => $rs->cost * $buffer_qty,
-                      'margin'  =>  ($rs->final_price * $buffer_qty) - ($rs->cost * $buffer_qty),
+                      'margin'  => ($rs->final_price * $buffer_qty) - ($rs->cost * $buffer_qty),
                       'id_policy'   => $rs->id_policy,
                       'id_rule'     => $rs->id_rule,
                       'customer_code' => $order->customer_code,
@@ -171,7 +171,7 @@ class Confirm_order
                     );
 
                     //--- 3. บันทึกยอดขาย
-                    if($this->ci->delivery_order_model->sold($arr) !== TRUE)
+                    if ($this->ci->delivery_order_model->sold($arr) !== TRUE)
                     {
                       $sc = FALSE;
                       $this->error = 'บันทึกขายไม่สำเร็จ';
@@ -184,7 +184,7 @@ class Confirm_order
 
               //------ ส่วนนี้สำหรับโอนเข้าคลังระหว่างทำ
               //------ หากเป็นออเดอร์เบิกแปรสภาพ
-              if($order->role == 'T' OR $order->role == 'Q')
+              if ($order->role == 'T' or $order->role == 'Q')
               {
                 //--- ตัวเลขที่มีการเปิดบิล
                 $sold_qty = ($rs->order_qty >= $rs->qc) ? $rs->qc : $rs->order_qty;
@@ -193,20 +193,20 @@ class Confirm_order
                 //--- ถ้ามีการเชื่อมโยงไว้ ยอดต้องมากกว่า 0 ถ้ายอดเป็น 0 แสดงว่าไม่ได้เชื่อมโยงไว้
                 $trans_list = $this->ci->transform_model->get_transform_product($rs->id);
 
-                if(!empty($trans_list))
+                if (!empty($trans_list))
                 {
                   //--- ถ้าไม่มีการเชื่อมโยงไว้
-                  foreach($trans_list as $ts)
+                  foreach ($trans_list as $ts)
                   {
                     //--- ถ้าจำนวนที่เชื่อมโยงไว้ น้อยกว่า หรือ เท่ากับ จำนวนที่ตรวจได้ (ไม่เกินที่สั่งไป)
                     //--- แสดงว่าได้ของครบตามที่ผูกไว้ ให้ใช้ตัวเลขที่ผูกไว้ได้เลย
                     //--- แต่ถ้าได้จำนวนที่ผูกไว้มากกว่าที่ตรวจได้ แสดงว่า ได้สินค้าไม่ครบ ให้ใช้จำนวนที่ตรวจได้แทน
                     $move_qty = $ts->order_qty <= $sold_qty ? $ts->order_qty : $sold_qty;
 
-                    if( $move_qty > 0)
+                    if ($move_qty > 0)
                     {
                       //--- update ยอดเปิดบิลใน tbl_order_transform_detail field sold_qty
-                      if($this->ci->transform_model->update_sold_qty($ts->id, $move_qty) === TRUE )
+                      if ($this->ci->transform_model->update_sold_qty($ts->id, $move_qty) === TRUE)
                       {
                         $sold_qty -= $move_qty;
                       }
@@ -221,7 +221,7 @@ class Confirm_order
               }
 
               //--- if lend
-              if($order->role == 'L')
+              if ($order->role == 'L')
               {
                 //--- ตัวเลขที่มีการเปิดบิล
                 $sold_qty = ($rs->order_qty >= $rs->qc) ? $rs->qc : $rs->order_qty;
@@ -234,7 +234,7 @@ class Confirm_order
                   'empID' => $order->empID
                 );
 
-                if($this->ci->lend_model->add_detail($arr) === FALSE)
+                if ($this->ci->lend_model->add_detail($arr) === FALSE)
                 {
                   $sc = FALSE;
                   $this->error = 'เพิ่มรายการค้างรับไม่สำเร็จ';
@@ -247,11 +247,11 @@ class Confirm_order
         //--- เคลียร์ยอดค้างที่จัดเกินมาไปที่ cancle หรือ เคลียร์ยอดที่เป็น 0
         $buffer = $this->ci->buffer_model->get_all_details($code);
         //--- ถ้ายังมีรายการที่ค้างอยู่ใน buffer เคลียร์เข้า cancle
-        if(!empty($buffer))
+        if (!empty($buffer))
         {
-          foreach($buffer as $rs)
+          foreach ($buffer as $rs)
           {
-            if($rs->qty != 0)
+            if ($rs->qty != 0)
             {
               $arr = array(
                 'order_code' => $rs->order_code,
@@ -263,7 +263,7 @@ class Confirm_order
                 'order_detail_id' => $rs->order_detail_id
               );
 
-              if($this->ci->cancle_model->add($arr) === FALSE)
+              if ($this->ci->cancle_model->add($arr) === FALSE)
               {
                 $sc = FALSE;
                 $this->error = 'เคลียร์ยอดค้างเข้า cancle ไม่สำเร็จ';
@@ -271,7 +271,7 @@ class Confirm_order
               }
             }
 
-            if($this->ci->buffer_model->delete($rs->id) === FALSE)
+            if ($this->ci->buffer_model->delete($rs->id) === FALSE)
             {
               $sc = FALSE;
               $this->error = 'ลบ Buffer ที่ค้างอยู่ไม่สำเร็จ';
@@ -283,9 +283,9 @@ class Confirm_order
         //--- บันทึกขายรายการที่ไม่นับสต็อก
         $bill = $this->ci->delivery_order_model->get_non_count_bill_detail($order->code);
 
-        if(!empty($bill))
+        if (!empty($bill))
         {
-          foreach($bill as $rs)
+          foreach ($bill as $rs)
           {
             //--- ข้อมูลสำหรับบันทึกยอดขาย
             $arr = array(
@@ -323,7 +323,7 @@ class Confirm_order
             );
 
             //--- 3. บันทึกยอดขาย
-            if($this->ci->delivery_order_model->sold($arr) !== TRUE)
+            if ($this->ci->delivery_order_model->sold($arr) !== TRUE)
             {
               $sc = FALSE;
               $this->error = 'บันทึกขายไม่สำเร็จ';
@@ -332,18 +332,18 @@ class Confirm_order
           }
         }
 
-        if($sc === TRUE)
+        if ($sc === TRUE)
         {
           $doc_total = $this->ci->delivery_order_model->get_billed_amount($code);
 
-          if( ! $this->ci->orders_model->update($code, array('doc_total' => $doc_total)))
+          if (! $this->ci->orders_model->update($code, array('doc_total' => $doc_total)))
           {
             $sc = FALSE;
             $this->error = "Failed to update doc total";
           }
         }
 
-        if($sc === TRUE)
+        if ($sc === TRUE)
         {
           $this->ci->db->trans_commit();
         }
@@ -363,7 +363,7 @@ class Confirm_order
       $sc = FALSE;
       $this->error = 'order code not found';
     }
-  }
 
-  return $sc;
-} //--- end class
+    return $sc;
+  }
+}

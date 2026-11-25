@@ -826,6 +826,4 @@ class Sync_data extends CI_Controller
 
     echo $count.' | '.$update.' | '.$message;
   }
-} //--- end class
-
- ?>
+}

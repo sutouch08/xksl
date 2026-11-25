@@ -766,7 +766,7 @@ class WM extends REST_Controller
     }
 
     $code = $data->code;
-    $reason = trim($data->cancel_reason);
+    $reason = trim($data->cancel_reason ?? '');
     $doc = $this->consign_order_model->get($code);
 
     if(empty($doc))

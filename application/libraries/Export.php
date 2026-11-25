@@ -81,7 +81,7 @@ class Export
 
         if($order->tax_status)
         {
-          $adr = trim($order->address);
+          $adr = trim($order->address ?? '');
           $province = parseProvince($order->province);
           $district = parseDistrict($order->district, $province);
           $sub_district = parseSubDistrict($order->sub_district, $province);
@@ -173,7 +173,7 @@ class Export
                 'VatPrcnt' => $vat_rate,
                 'VatGroup' => $vat_code,
                 'PriceAfVat' => $rs->sell,
-                'GTotal' => round($rs->total_amount, 2),
+                'GTotal' => round($rs->total_amount ?? 0, 2),
                 'VatSum' => get_vat_amount($rs->total_amount), //---- tool_helper
                 'TaxType' => 'Y', //--- คิดภาษีหรือไม่
                 'F_E_Commerce' => 'A', //--- A = Add , U = Update
@@ -275,7 +275,7 @@ class Export
 
         if($order->tax_status)
         {
-          $adr = trim($order->address);
+          $adr = trim($order->address ?? '');
           $province = parseProvince($order->province);
           $district = parseDistrict($order->district, $province);
           $sub_district = parseSubDistrict($order->sub_district, $province);
@@ -362,7 +362,7 @@ class Export
                 'VatPrcnt' => $vat_rate,
                 'VatGroup' => $vat_code,
                 'PriceAfVat' => $rs->sell,
-                'GTotal' => round($rs->total_amount, 2),
+                'GTotal' => round($rs->total_amount ?? 0, 2),
                 'VatSum' => get_vat_amount($rs->total_amount), //---- tool_helper
                 'TaxType' => 'Y', //--- คิดภาษีหรือไม่
                 'F_E_Commerce' => 'A', //--- A = Add , U = Update
@@ -515,15 +515,15 @@ class Export
                     'Dscription' => limitText($rs->product_name, 95),
                     'Quantity' => $rs->qty,
                     'unitMsr' => $this->ci->products_model->get_unit_code($rs->product_code),
-                    'PriceBefDi' => round($rs->price,2),
-                    'LineTotal' => round($rs->total_amount,2),
+                    'PriceBefDi' => round($rs->price ?? 0,2),
+                    'LineTotal' => round($rs->total_amount ?? 0,2),
                     'ShipDate' => $date_add,
                     'Currency' => $currency,
                     'Rate' => 1,
                     //--- คำนวณส่วนลดจากยอดเงินกลับมาเป็น % (เพราะบางทีมีส่วนลดหลายชั้น)
                     'DiscPrcnt' => discountAmountToPercent($rs->discount_amount, $rs->qty, $rs->price), ///--- discount_helper
                     'Price' => round(remove_vat($rs->price),2),
-                    'TotalFrgn' => round($rs->total_amount,2),
+                    'TotalFrgn' => round($rs->total_amount ?? 0,2),
                     'FromWhsCod' => $rs->warehouse_code,
                     'WhsCode' => empty($zone) ? NULL : $zone->warehouse_code,
                     'FisrtBin' => $doc->zone_code, //-- โซนปลายทาง
@@ -532,9 +532,9 @@ class Export
                     'TaxStatus' => 'Y',
                     'VatPrcnt' => $vat_rate,
                     'VatGroup' => $vat_code,
-                    'PriceAfVAT' => round($rs->sell,2),
-                    'VatSum' => round(get_vat_amount($rs->total_amount),2),
-                    'GTotal' => round($rs->total_amount, 2),
+                    'PriceAfVAT' => round($rs->sell ?? 0,2),
+                    'VatSum' => round(get_vat_amount($rs->total_amount ?? 0),2),
+                    'GTotal' => round($rs->total_amount ?? 0, 2),
                     'TaxType' => 'Y',
                     'F_E_Commerce' => 'A',
                     'F_E_CommerceDate' => sap_date(now())

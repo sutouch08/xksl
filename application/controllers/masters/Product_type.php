@@ -19,22 +19,12 @@ class Product_type extends PS_Controller
   public function index()
   {
 		$code = get_filter('code', 'type_code', '');
-		$name = get_filter('name', 'type_name', '');
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
+		$name = get_filter('name', 'type_name', '');		
+		$perpage = get_rows();
+		$segment = 4;
 		$rows = $this->product_type_model->count_rows($code, $name);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$type = $this->product_type_model->get_data($code, $name, $perpage, $this->uri->segment($segment));
-
     $data = array();
 
     if(!empty($type))
@@ -49,7 +39,6 @@ class Product_type extends PS_Controller
         $data[] = $arr;
       }
     }
-
 
     $ds = array(
       'code' => $code,
@@ -261,9 +250,6 @@ class Product_type extends PS_Controller
   public function clear_filter()
 	{
 		$filter = array('type_code', 'type_name');
-    clear_filter($filter);
-		echo 'done';
+    clear_filter($filter);		
 	}
-
-}//--- end class
- ?>
+}

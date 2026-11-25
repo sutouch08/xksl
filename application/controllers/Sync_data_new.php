@@ -959,6 +959,4 @@ class Sync_data_new extends CI_Controller
     $this->sync_data_model->add_logs($logs);
 
   }
-} //--- end class
-
- ?>
+}

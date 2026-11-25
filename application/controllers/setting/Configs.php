@@ -5,8 +5,7 @@ class Configs extends PS_Controller
   public $menu_code = 'SCCONF';
 	public $menu_group_code = 'SC';
   public $menu_sub_group_code = 'CONFIG';
-	public $title = 'การกำหนดค่า';
-  public $error = '';
+	public $title = 'การกำหนดค่า';  
   public $is_mobile = FALSE;
 
   public function __construct()
@@ -26,7 +25,7 @@ class Configs extends PS_Controller
   public function index($tab = 'company')
   {
     $groups = $this->config_model->get_group();
-    $ps = get_permission('SCSYSC');
+    $ps = get_permission('SCSYSC', $this->_user->uid);
     $cando = ($ps->can_add + $ps->can_edit + $ps->can_delete) > 0 ? TRUE : FALSE;
     $ds = array();
 
@@ -82,5 +81,4 @@ class Configs extends PS_Controller
     echo $sc === TRUE ? 'success' : $this->error;
   }
 
-} //-- end class
-?>
+}

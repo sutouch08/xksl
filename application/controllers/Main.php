@@ -78,7 +78,7 @@ class Main extends PS_Controller
   public function get_sell_items_stock()
   {
     $sc = array();
-    $txt = trim($this->input->post('search_text'));
+    $txt = trim($this->input->post('search_text') ?? '');
 		$warehouse = get_null($this->input->post('warehouse_code'));
     if(!empty($txt))
     {

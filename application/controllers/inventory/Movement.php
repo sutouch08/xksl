@@ -6,9 +6,7 @@ class Movement extends PS_Controller
   public $menu_code = 'ICCKMV';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'CHECK';
-	public $title = 'ตรวจสอบ Movement';
-  public $filter;
-  public $error;
+	public $title = 'ตรวจสอบ Movement'; 
   public $segment = 4;
 
   public function __construct()
@@ -82,7 +80,7 @@ class Movement extends PS_Controller
     $f = fopen('php://memory', 'w');
     $delimiter = ",";
     fputs($f, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
-    fputcsv($f, $header, $delimiter);
+    fputcsv($f, $header, $delimiter, '"', '\\');
 
     if (! empty($list))
     {
@@ -98,7 +96,7 @@ class Movement extends PS_Controller
           thai_date($rs->date_upd, TRUE)
         );
 
-        fputcsv($f, $arr, $delimiter);
+        fputcsv($f, $arr, $delimiter, '"', '\\');
       }     
     }
 

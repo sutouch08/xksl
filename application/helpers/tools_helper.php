@@ -1,7 +1,7 @@
 <?php
 function setToken($token)
 {
-	$CI =& get_instance();
+	$ci =& get_instance();
 	$cookie = array(
 		'name' => 'file_download_token',
 		'value' => $token,
@@ -9,9 +9,8 @@ function setToken($token)
 		'path' => '/'
 	);
 
-	return $CI->input->set_cookie($cookie);
+	return $ci->input->set_cookie($cookie);
 }
-
 
 function parsePhoneNumber($phone, $length = 10)
 {
@@ -21,14 +20,13 @@ function parsePhoneNumber($phone, $length = 10)
 
   if($phone != "")
   {
-    $phone = trim($phone);
+    $phone = trim($phone ?? '');
     $phone = str_replace($find, $rep, $phone);
     $phone = substr($phone, $length);
-
     return $phone;
   }
 
-  return NULL;
+  return '';
 }
 
 
@@ -50,10 +48,9 @@ function parseSubDistrict($ad, $province)
 			$ad = str_replace($find, $rep, $ad);
 			return substr_replace($ad, 'ตำบล', 0, 0);
 		}
-
 	}
 
-	return NULL;
+	return '';
 }
 
 
@@ -77,7 +74,7 @@ function parseDistrict($ad, $province)
 		}
 	}
 
-	return NULL;
+	return '';
 }
 
 
@@ -98,7 +95,7 @@ function parseProvince($ad)
 		return $ad;
 	}
 
-	return NULL;
+	return '';
 }
 
 
@@ -176,17 +173,17 @@ function is_active($val, $showX = TRUE)
 
 function get_filter($postName, $cookieName, $defaultValue = "")
 {
-  $CI =& get_instance();
+  $ci =& get_instance();
   $sc = '';
 
-  if($CI->input->post($postName) !== NULL)
+  if($ci->input->post($postName) !== NULL)
   {
-    $sc = trim($CI->input->post($postName));
-    $CI->input->set_cookie(array('name' => $cookieName, 'value' => $sc, 'expire' => 3600 , 'path' => '/'));
+    $sc = trim($ci->input->post($postName) ?? '');
+    $ci->input->set_cookie(array('name' => $cookieName, 'value' => $sc, 'expire' => 3600 , 'path' => '/'));
   }
-  else if($CI->input->cookie($cookieName) !== NULL)
+  else if($ci->input->cookie($cookieName) !== NULL)
   {
-    $sc = $CI->input->cookie($cookieName);
+    $sc = $ci->input->cookie($cookieName) ?? '';
   }
   else
   {
@@ -231,7 +228,6 @@ function set_rows($value = 20)
 function get_rows()
 {
   $rows = get_cookie('rows');
-
 	return $rows <= 0 ? 20 : ($rows > 300 ? 300 : $rows);
 }
 
@@ -250,14 +246,15 @@ function ac_format($val, $digit = 0)
 
 function getConfig($code)
 {
-  $CI =& get_instance();
-  $rs = $CI->db->select('value')->where('code', $code)->get('config');
+  $ci =& get_instance();
+  $rs = $ci->db->select('value')->where('code', $code)->get('config');
+
   if($rs->num_rows() == 1)
   {
     return $rs->row()->value;
   }
 
-	return NULL;
+	return '';
 }
 
 
@@ -279,18 +276,18 @@ function getWrxApiConfig()
 		return $ds;
 	}
 
-	return NULL;
+	return '';
 }
 
 
-function get_vat_amount($amount, $vat = NULL, $type = 'I')
+function get_vat_amount($amount, $vat = '', $type = 'I')
 {
 	//--- type I = include, E = exclude
 	$re_vat = 0;
 
 	if($amount > 0)
 	{
-		if($vat === NULL)
+		if($vat === '')
 		{
 			$vat = getConfig('SALE_VAT_RATE');
 		}
@@ -309,9 +306,9 @@ function get_vat_amount($amount, $vat = NULL, $type = 'I')
 }
 
 
-function remove_vat($amount, $vat = NULL)
+function remove_vat($amount, $vat = '')
 {
-	if($vat === NULL)
+	if($vat === '')
 	{
 		$vat = getConfig('SALE_VAT_RATE'); //-- 7
 	}
@@ -362,9 +359,9 @@ function get_discount_amount($price, $disc = 0)
 }
 
 
-function add_vat($amount, $vat = NULL)
+function add_vat($amount, $vat = '')
 {
-	if($vat === NULL)
+	if($vat === '')
 	{
 		$vat = getConfig('SALE_VAT_RATE'); //-- 7
 	}
@@ -401,15 +398,15 @@ function set_error($key, $name = "data")
 
 function set_message($message)
 {
-  $CI =& get_instance();
-  $CI->session->set_flashdata('success', $message);
+  $ci =& get_instance();
+  $ci->session->set_flashdata('success', $message);
 }
 
 
 //--- return null if blank value
 function get_null($value)
 {
-	return $value === '' ? NULL : $value;
+	return $value === '' ? '' : $value;
 }
 
 
@@ -439,7 +436,7 @@ function can_do($pm)
 
 function get_zero($value)
 {
-	return $value === NULL ? 0 : $value;
+	return $value === '' || $value === NULL ? 0 : $value;
 }
 
 
@@ -453,36 +450,35 @@ function pagination_config( $base_url, $total_rows = 0, $perpage = 20, $segment 
 	$input_rows .= '<buton class="btn btn-success btn-xs" type="button" onClick="set_rows()">แสดง</button>';
 	$input_rows .= '</p>';
 
-	$config['full_tag_open'] 		= '<nav><ul class="pagination">';
-	$config['full_tag_close'] 		= '</ul>'.$input_rows.'</nav><hr class="hidden-xs">';
-	$config['first_link'] 				= 'First';
-	$config['first_tag_open'] 		= '<li>';
-	$config['first_tag_close'] 		= '</li>';
-	$config['next_link'] 				= 'Next';
-	$config['next_tag_open'] 		= '<li>';
-	$config['next_tag_close'] 	= '</li>';
-	$config['prev_link'] 			= 'prev';
-	$config['prev_tag_open'] 	= '<li>';
-	$config['prev_tag_close'] 	= '</li>';
-	$config['last_link'] 				= 'Last';
-	$config['last_tag_open'] 		= '<li>';
-	$config['last_tag_close'] 		= '</li>';
-	$config['cur_tag_open'] 		= '<li class="active"><a href="#">';
-	$config['cur_tag_close'] 		= '</a></li>';
-	$config['num_tag_open'] 		= '<li>';
-	$config['num_tag_close'] 		= '</li>';
-	$config['uri_segment'] 		= $segment;
-	$config['per_page']			= $perpage;
-	$config['total_rows']			= $total_rows != false ? $total_rows : 0 ;
-	$config['base_url']				= $base_url;
+	$config['full_tag_open'] = '<nav><ul class="pagination">';
+	$config['full_tag_close'] = '</ul>'.$input_rows.'</nav><hr class="hidden-xs">';
+	$config['first_link'] = 'First';
+	$config['first_tag_open'] = '<li>';
+	$config['first_tag_close'] = '</li>';
+	$config['next_link'] = 'Next';
+	$config['next_tag_open'] = '<li>';
+	$config['next_tag_close'] = '</li>';
+	$config['prev_link'] = 'prev';
+	$config['prev_tag_open'] = '<li>';
+	$config['prev_tag_close'] = '</li>';
+	$config['last_link'] = 'Last';
+	$config['last_tag_open'] = '<li>';
+	$config['last_tag_close'] = '</li>';
+	$config['cur_tag_open'] = '<li class="active"><a href="#">';
+	$config['cur_tag_close'] = '</a></li>';
+	$config['num_tag_open'] = '<li>';
+	$config['num_tag_close'] = '</li>';
+	$config['uri_segment'] = $segment;
+	$config['per_page'] = $perpage;
+	$config['total_rows'] = $total_rows != false ? $total_rows : 0 ;
+	$config['base_url'] = $base_url;
 
 	return $config;
 }
 
 
 function convert($txt)
-{
-	//return iconv('UTF-8', 'CP850', $txt);
+{	
 	return $txt;
 }
 
@@ -525,6 +521,7 @@ function statusBackgroundColor($is_expire, $status, $is_approve = 1)
 
 function textStatusColor($status = 'P')
 {
+	$status = empty($status) ? 'P' : $status;
 	$bk_color = "";
 
 	$arr = [
@@ -558,6 +555,3 @@ function genUid($lenght = 13)
 
 	return substr(bin2hex($bytes), 0, $lenght);
 }
-
-
- ?>

@@ -2,9 +2,10 @@
 function zone_in($txt)
 {
   $sc = array('0');
-  $CI =& get_instance();
-  $CI->load->model('masters/zone_model');
-  $zone = $CI->zone_model->search($txt);
+  $ci =& get_instance();
+  $ci->load->model('masters/zone_model');
+  $zone = $ci->zone_model->search($txt);
+  
   if(!empty($zone))
   {
     foreach($zone as $rs)
@@ -17,10 +18,9 @@ function zone_in($txt)
 }
 
 
-function select_pickface_zone($code = NULL)
+function select_pickface_zone($code = '')
 {
   $sc = "";
-
   $ci =& get_instance();
   $ci->load->model('maters/zone_model');
   $zone = $ci->zone_model->get_pickface_zone();
@@ -35,5 +35,3 @@ function select_pickface_zone($code = NULL)
 
   return $sc;
 }
-
- ?>

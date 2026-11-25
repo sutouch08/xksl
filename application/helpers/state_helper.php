@@ -1,6 +1,8 @@
 <?php
 function get_state_name($state)
 {
+  $state = empty($state) ? '1' : $state;
+
   $name = array(
     '1' => 'รอดำเนินการ',
     '2' => 'รอชำระเงิน',
@@ -26,49 +28,43 @@ function get_state_name($state)
     '36' => 'Cancelled'
   );
 
-  return $name[$state];
+  return isset($name[$state]) ? $name[$state] : '';
 }
 
 
 function state_color($state, $is_saved = 1, $is_expired = 0)
 {
-  if($is_saved == 0 && $is_expired == 0)
-  {
-    return '';
-  }
-  else if($is_expired == 1)
-  {
-    return 'color:#CCC; background-color:#000;';
-  }
-  else
-  {
-    $color = array(
-      '1' => 'color:#333; background-color:#66CEF5;',
-      '2' => 'color:#333; background-color:#FFFF99;',
-      '3' => 'color:#000; background-color:#ADA9D4;',
-      '4' => 'color:#000; background-color:#FBB57F;',
-      '5' => 'color:#FFF; background-color:#DA81F5;',
-      '6' => 'color:#FFF; background-color:#088A68;',
-      '7' => 'color:#000; background-color:#E7A9CD;',
-      '8' => 'color:#333; background-color:#92CD88;',
-      '9' => 'color:#000; background-color:#AAB2BD;',
-			'10' => 'color:#000; background-color:#66CDAA;;',
-			'19' => 'color:#000; background-color:#FBB57F;',
-			'20' => 'color:#000; background-color:#088A68;',
-			'21' => 'color:#000; background-color:#E7A9CD;',
-			'22' => 'color:#333; background-color:#92CD88;',
-			'23' => 'color:#000; background-color:#AAB2BD;',
-      '30' => 'color:#000; background-color:#FBB57F;',
-      '31' => 'color:#000; background-color:#FBB57F;',
-      '32' => 'color:#000; background-color:#FBB57F;',
-			'33' => 'color:#000; background-color:#088A68;',
-			'34' => 'color:#000; background-color:#E7A9CD;',
-			'35' => 'color:#333; background-color:#92CD88;',
-			'36' => 'color:#000; background-color:#AAB2BD;'
-    );
+  $state = empty($state) ? '1' : $state;
 
-    return $color[$state];
-  }
+  if($is_saved == 0 && $is_expired == 0) return '';  
+  if($is_expired == 1) return 'color:#CCC; background-color:#000;';
+
+  $color = array(
+    '1' => 'color:#333; background-color:#66CEF5;',
+    '2' => 'color:#333; background-color:#FFFF99;',
+    '3' => 'color:#000; background-color:#ADA9D4;',
+    '4' => 'color:#000; background-color:#FBB57F;',
+    '5' => 'color:#FFF; background-color:#DA81F5;',
+    '6' => 'color:#FFF; background-color:#088A68;',
+    '7' => 'color:#000; background-color:#E7A9CD;',
+    '8' => 'color:#333; background-color:#92CD88;',
+    '9' => 'color:#000; background-color:#AAB2BD;',
+    '10' => 'color:#000; background-color:#66CDAA;;',
+    '19' => 'color:#000; background-color:#FBB57F;',
+    '20' => 'color:#000; background-color:#088A68;',
+    '21' => 'color:#000; background-color:#E7A9CD;',
+    '22' => 'color:#333; background-color:#92CD88;',
+    '23' => 'color:#000; background-color:#AAB2BD;',
+    '30' => 'color:#000; background-color:#FBB57F;',
+    '31' => 'color:#000; background-color:#FBB57F;',
+    '32' => 'color:#000; background-color:#FBB57F;',
+    '33' => 'color:#000; background-color:#088A68;',
+    '34' => 'color:#000; background-color:#E7A9CD;',
+    '35' => 'color:#333; background-color:#92CD88;',
+    '36' => 'color:#000; background-color:#AAB2BD;'
+  );
+
+  return $color[$state];
 }
 
 function soko_state_list_array()
@@ -92,6 +88,3 @@ function soko_state_list_array()
 
   return $stateList;
 }
-
-
-?>

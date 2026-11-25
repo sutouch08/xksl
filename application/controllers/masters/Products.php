@@ -1,5 +1,9 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 class Products extends PS_Controller
 {
   public $menu_code = 'DBPROD';
@@ -67,42 +71,35 @@ class Products extends PS_Controller
       redirect($this->home);
     }
     else
-    {
-      //--- แสดงผลกี่รายการต่อหน้า
-  		$perpage = get_rows();
-  		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-  		if($perpage > 300)
-  		{
-  			$perpage = 20;
-  		}
-
-  		$segment  = 4; //-- url segment
-  		$rows     = $this->product_style_model->count_rows($filter);
-  		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-  		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+    {      
+  		$perpage = get_rows();    
+  		$segment  = 4;
+  		$rows = $this->product_style_model->count_rows($filter);  		
+  		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
   		$products = $this->product_style_model->get_data($filter, $perpage, $this->uri->segment($segment));
-      $ds       = array();
+      $ds = array();
+
       if(!empty($products))
       {
         foreach($products as $rs)
         {
           $product = new stdClass();
-          $product->code    = $rs->code;
+          $product->code = $rs->code;
           $product->old_code = $rs->old_code;
-          $product->name    = $rs->name;
-          $product->price   = $rs->price;
-          $product->group   = $this->product_group_model->get_name($rs->group_code);
+          $product->name = $rs->name;
+          $product->price = $rs->price;
+          $product->group = $this->product_group_model->get_name($rs->group_code);
           $product->main_group = $this->product_main_group_model->get_name($rs->main_group_code);
           $product->sub_group = $this->product_sub_group_model->get_name($rs->sub_group_code);
-          $product->kind    = $this->product_kind_model->get_name($rs->kind_code);
-          $product->type    = $this->product_type_model->get_name($rs->type_code);
-          $product->category  = $this->product_category_model->get_name($rs->category_code);
-          $product->brand   = $this->product_brand_model->get_name($rs->brand_code);
+          $product->kind = $this->product_kind_model->get_name($rs->kind_code);
+          $product->type = $this->product_type_model->get_name($rs->type_code);
+          $product->category = $this->product_category_model->get_name($rs->category_code);
+          $product->brand = $this->product_brand_model->get_name($rs->brand_code);
           $product->collection = $this->product_collection_model->get_name($rs->collection_code);
-          $product->year    = $rs->year;
-          $product->sell    = $rs->can_sell;
-          $product->active  = $rs->active;
-          $product->api     = $rs->is_api;
+          $product->year = $rs->year;
+          $product->sell = $rs->can_sell;
+          $product->active = $rs->active;
+          $product->api = $rs->is_api;
           $product->date_upd = $rs->date_upd;
 
           $ds[] = $product;
@@ -110,7 +107,6 @@ class Products extends PS_Controller
       }
 
       $filter['data'] = $ds;
-
   		$this->pagination->initialize($init);
       $this->load->view('masters/products/products_view', $filter);
     }
@@ -119,8 +115,8 @@ class Products extends PS_Controller
 
   public function export_filter()
   {
-    ini_set('memory_limit','2048M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
-
+    ini_set('memory_limit','2048M');
+    ini_set('max_execution_time', 600);
     $token = $this->input->post('token');
 
     $ds = array(
@@ -151,7 +147,7 @@ class Products extends PS_Controller
     $f = fopen('php://memory', 'w');
     $delimiter = ",";
     fputs($f, $bom = ( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-    fputcsv($f, $header, $delimiter);
+    fputcsv($f, $header, $delimiter, '"', '\\');
 
     if(!empty($products))
     {
@@ -190,29 +186,18 @@ class Products extends PS_Controller
           $is_sell
         );
 
-        fputcsv($f, $arr, $delimiter);
-      }
-
-      $memuse = (memory_get_usage() / 1024) / 1024;
-      $arr = array('memory usage', round($memuse, 2).' MB');
-
-      fputcsv($f, $arr, $delimiter);
+        fputcsv($f, $arr, $delimiter, '"', '\\');
+      }      
     }
 
     //--- Move to begin of file
     fseek($f, 0);
-
     setToken($token);
-
     $file_name = "Products Master.csv";
     header('Content-Type: text/csv');
-    header('Content-Disposition: attachment;filename="'.$file_name.'"');
-
-    //output all remaining data on a file pointer
+    header('Content-Disposition: attachment;filename="'.$file_name.'"');    
     fpassthru($f); ;
-
     exit();
-
   }
 
 
@@ -226,27 +211,26 @@ class Products extends PS_Controller
   {
     if($this->input->post('code'))
     {
-      $code     = trim($this->input->post('code')); //--- ตัดช่องว่างหัว-ท้าย
-      $name     = addslashes(trim($this->input->post('name'))); //--- escape string
-      $group    = get_null($this->input->post('group_code'));
+      $code = trim($this->input->post('code') ?? ''); //--- ตัดช่องว่างหัว-ท้าย
+      $name = addslashes(trim($this->input->post('name') ?? '')); //--- escape string
+      $group = get_null($this->input->post('group_code'));
 			$main_group = get_null($this->input->post('main_group_code'));
       $sub_group = get_null($this->input->post('sub_group_code'));
       $category = get_null($this->input->post('category_code'));
-      $kind     = get_null($this->input->post('kind_code'));
-      $type     = get_null($this->input->post('type_code'));
+      $kind = get_null($this->input->post('kind_code'));
+      $type = get_null($this->input->post('type_code'));
       $collection = get_null($this->input->post('collection_code'));
-      $old_code = NULL; //get_null($this->input->post('old_style'));
-      //$old_code = empty($old_code) ? $code : $old_code;
-      $brand    = get_null($this->input->post('brand_code'));
-      $year     = get_null($this->input->post('year'));
-      $cost     = $this->input->post('cost');
-      $price    = $this->input->post('price');
-      $unit     = $this->input->post('unit_code');
+      $old_code = NULL; 
+      $brand = get_null($this->input->post('brand_code'));
+      $year = get_null($this->input->post('year'));
+      $cost = $this->input->post('cost');
+      $price = $this->input->post('price');
+      $unit = $this->input->post('unit_code');
       $count_stock = $this->input->post('count_stock') === NULL ? 0 :1;
       $can_sell = $this->input->post('can_sell') === NULL ? 0 : 1;
-      $is_api   = $this->input->post('is_api') === NULL ? 0 : 1;
-      $active   = $this->input->post('active')=== NULL ? 0 : 1;
-      $tabs     = $this->input->post('tabs');
+      $is_api = $this->input->post('is_api') === NULL ? 0 : 1;
+      $active = $this->input->post('active')=== NULL ? 0 : 1;
+      $tabs = $this->input->post('tabs');
 
       $ds = array(
         'code' => $code,
@@ -312,9 +296,7 @@ class Products extends PS_Controller
     $style = $this->product_style_model->get($style_code);
 
     if(!empty($style))
-    {
-      // $ext = $this->product_style_model->is_sap_exists($style_code);
-      // $exs = $this->product_style_model->is_middle_exists($style_code);
+    {      
       $ext = $this->product_style_model->is_middle_exists($style_code);
       $flag = $ext === TRUE ? 'U' : 'A';
       $arr = array(
@@ -357,8 +339,6 @@ class Products extends PS_Controller
   }
 
 
-
-
   //--- update item data
   public function update_item()
   {
@@ -366,8 +346,8 @@ class Products extends PS_Controller
     {
       $id = $this->input->post('id');
       $code = $this->input->post('code');
-      $old_code = NULL;//get_null(trim($this->input->post('old_code')));
-      $barcode = get_null(trim($this->input->post('barcode')));
+      $old_code = NULL;
+      $barcode = get_null(trim($this->input->post('barcode') ?? ''));
       $cost = get_null($this->input->post('cost'));
       $price = get_null($this->input->post('price'));
 
@@ -397,18 +377,13 @@ class Products extends PS_Controller
   }
 
 
-
-
-
-
-
   public function update_style()
   {
     if($this->input->post('code'))
     {
       $code = $this->input->post('code'); //--- style code
       $name = $this->input->post('name'); //--- style name
-      $old_code = get_null($this->input->post('old_style'));
+      $old_code = NULL;
       $old_code = empty($old_code) ? $code : $old_code;
       $cost = $this->input->post('cost'); //--- style cost
       $price = $this->input->post('price'); //--- style price
@@ -425,16 +400,14 @@ class Products extends PS_Controller
       $count = $this->input->post('count_stock');
       $sell = $this->input->post('can_sell');
       $api = $this->input->post('is_api');
-      $active = $this->input->post('active');
-      $user = get_cookie('uname');
-
+      $active = $this->input->post('active');     
       $flag_cost = $this->input->post('cost_update');
       $flag_price = $this->input->post('price_update');
 
       $tabs = $this->input->post('tabs');
 
       $ds = array(
-        'name' => addslashes(trim($name)),
+        'name' => addslashes(trim($name ?? '')),
         'group_code' => get_null($group),
 				'main_group_code' => get_null($main_group),
         'sub_group_code' => get_null($sub_group),
@@ -496,13 +469,13 @@ class Products extends PS_Controller
           //--- ถ้าติกให้ updte cost มาด้วย
           if(!empty($flag_cost))
           {
-            $ds['cost'] = ($cost === NULL ? 0.00 : $cost);
+            $ds['cost'] = floatval($cost ?? 0.00);
           }
 
           //--- ถ้าติกให้ updte price มาด้วย
           if(!empty($flag_price))
           {
-            $ds['price'] = ($price === NULL ? 0.00 : $price);
+            $ds['price'] = floatval($price ?? 0.00);
           }
 
           foreach($items as $item)
@@ -756,18 +729,18 @@ class Products extends PS_Controller
 
       if($colors !== NULL && $sizes !== NULL)
       {
-        $rs = $this->gen_color_and_size($code, $colors, $sizes, $cost, $price, $old_code);
+        $rs = $this->gen_color_and_size($code, $colors, $sizes, $cost, $price);
       }
 
       if($colors !== NULL && $sizes === NULL)
       {
-        $rs = $this->gen_color_only($code, $colors, $old_code);
+        $rs = $this->gen_color_only($code, $colors);
       }
 
 
       if($colors === NULL && $sizes !== NULL)
       {
-        $rs = $this->gen_size_only($code, $sizes, $old_code);
+        $rs = $this->gen_size_only($code, $sizes);
       }
 
       if($rs === TRUE && $colors !== NULL && $images !== NULL)
@@ -807,7 +780,7 @@ class Products extends PS_Controller
 
 
 
-  public function gen_color_and_size($style, $colors, $sizes, $cost, $price, $old_code)
+  public function gen_color_and_size($style, $colors, $sizes, $cost, $price)
   {
     $sc = TRUE;
     foreach($colors as $color)
@@ -840,20 +813,19 @@ class Products extends PS_Controller
           'active' => $ds->active,
           'is_api' => $ds->is_api,
           'old_style' => $ds->old_code,
-          'old_code' => (isset($old_code[$code]) ? $old_code[$code] : $code),
           'update_user' => get_cookie('uname')
         );
 
         if($this->products_model->is_exists($code))
         {
-          $rs = $this->products_model->update($code, $data);
+          $sc = $this->products_model->update($code, $data);
         }
         else
         {
-          $rs = $this->products_model->add($data);
+          $sc = $this->products_model->add($data);
         }
 
-        if($rs === FALSE)
+        if($sc === FALSE)
         {
           $this->error .= 'Insert fail : '.$code.' /n' ;
         }
@@ -896,18 +868,19 @@ class Products extends PS_Controller
         'can_sell' => $ds->can_sell,
         'active' => $ds->active,
         'is_api' => $ds->is_api,
-        'old_style' => $ds->old_code,
-        'old_code' => (isset($old_code[$code]) ? $old_code[$code] : $code),
+        'old_style' => $ds->old_code,        
         'update_user' => get_cookie('uname')
       );
 
-      $rs = $this->products_model->add($data);
+      $sc = $this->products_model->add($data);
 
-      if($rs === FALSE)
+      if($sc === FALSE)
       {
         $this->error .= 'Insert fail : '.$code.' /n' ;
       }
     }
+
+    return $sc;
   }
 
 
@@ -943,18 +916,19 @@ class Products extends PS_Controller
         'can_sell' => $ds->can_sell,
         'active' => $ds->active,
         'is_api' => $ds->is_api,
-        'old_style' => $ds->old_code,
-        'old_code' => (isset($old_code[$code]) ? $old_code[$code] : $code),
+        'old_style' => $ds->old_code,       
         'update_user' => get_cookie('uname')
       );
 
-      $rs = $this->products_model->add($data);
+      $sc = $this->products_model->add($data);
 
-      if($rs === FALSE)
+      if($sc === FALSE)
       {
         $this->error .= 'Insert fail : '.$code.' /n' ;
       }
     }
+
+    return $sc;
   }
 
 
@@ -1085,7 +1059,7 @@ class Products extends PS_Controller
   //--- ดึง items และรูปภาพ เพื่อทำการเชื่อมโยงรูปภาพ
   public function get_image_items()
   {
-    $style = trim($this->input->post('style_code'));
+    $style = trim($this->input->post('style_code') ?? '');
 
     $sc = 'noimage';
     //---- จำนวนรายการสินค้า ทั้งหมด
@@ -1358,15 +1332,13 @@ class Products extends PS_Controller
   {
     $products = $this->products_model->get_style_items($code);
 
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Stock Balance Report');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();    
+    $sheet->setTitle('Stock Balance Report');
 
     //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', 'Barcode');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'Item Code');
+    $sheet->setCellValue('A1', 'Barcode');
+    $sheet->setCellValue('B1', 'Item Code');
 
 
     $row = 2;
@@ -1374,12 +1346,12 @@ class Products extends PS_Controller
     {
       foreach($products as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $rs->barcode);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->code);
+        $sheet->setCellValue('A'.$row, $rs->barcode);
+        $sheet->setCellValue('B'.$row, $rs->code);
         $row++;
       }
 
-      $this->excel->getActiveSheet()->getStyle('A2:A'.$row)->getNumberFormat()->setFormatCode('0');
+      $sheet->getStyle('A2:A'.$row)->getNumberFormat()->setFormatCode('0');
     }
 
     setToken($token);
@@ -1387,7 +1359,7 @@ class Products extends PS_Controller
     $file_name = "{$code}_barcode.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
 
   }
@@ -1414,5 +1386,3 @@ class Products extends PS_Controller
     clear_filter($filter);
 	}
 }
-
-?>

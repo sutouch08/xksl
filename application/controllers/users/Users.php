@@ -1,7 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-class Users extends PS_Controller{
+class Users extends PS_Controller
+{
 	public $menu_code = 'SCUSER'; //--- Add/Edit Users
 	public $menu_group_code = 'SC'; //--- System security
 	public $title = 'Users';
@@ -12,8 +15,6 @@ class Users extends PS_Controller{
     $this->home = base_url().'users/users';
   }
 
-
-
   public function index()
   {
 		$filter = array(
@@ -23,22 +24,11 @@ class Users extends PS_Controller{
 			'status' => get_filter('status', 'status', 'all')
 		);
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
+		$perpage = get_rows();
 		$segment = 4; //-- url segment
 		$rows = $this->user_model->count_rows($filter);
-
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-
 		$rs = $this->user_model->get_list($filter, $perpage, $this->uri->segment($segment));
-
 		$filter['data'] = $rs;
 
 		$this->pagination->initialize($init);
@@ -364,34 +354,34 @@ class Users extends PS_Controller{
 		$user = $this->user_model->get_user($id);
 		$uname = empty($user) ? 'no data' : $user->uname;
 
-    //--- load excel library
-    $this->load->library('excel');
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle($uname);
+    $excel = new Spreadsheet();
+		$sheet = $excel->getActiveSheet();
+    $excel->setActiveSheetIndex(0);
+    $sheet->setTitle($uname);
 
 		if( ! empty($user))
 		{
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth('30');
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth('15');
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth('15');
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth('15');
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth('15');
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth('15');
+			$sheet->getColumnDimension('A')->setWidth('30');
+			$sheet->getColumnDimension('B')->setWidth('15');
+			$sheet->getColumnDimension('C')->setWidth('15');
+			$sheet->getColumnDimension('D')->setWidth('15');
+			$sheet->getColumnDimension('E')->setWidth('15');
+			$sheet->getColumnDimension('F')->setWidth('15');
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'User : ')->getStyle('A1')->getAlignment()->setHorizontal('right');
-			$this->excel->getActiveSheet()->setCellValue('B1', $user->uname);
-			$this->excel->getActiveSheet()->mergeCells('B1:C1');
+			$sheet->setCellValue('A1', 'User : ')->getStyle('A1')->getAlignment()->setHorizontal('right');
+			$sheet->setCellValue('B1', $user->uname);
+			$sheet->mergeCells('B1:C1');
 
-			$this->excel->getActiveSheet()->setCellValue('D1', 'Display name : ')->getStyle('D1')->getAlignment()->setHorizontal('right');
-			$this->excel->getActiveSheet()->setCellValue('E1', $user->name);
-			$this->excel->getActiveSheet()->mergeCells('E1:F1');
+			$sheet->setCellValue('D1', 'Display name : ')->getStyle('D1')->getAlignment()->setHorizontal('right');
+			$sheet->setCellValue('E1', $user->name);
+			$sheet->mergeCells('E1:F1');
 
-			$this->excel->getActiveSheet()->setCellValue('A2', 'Profile : ')->getStyle('A2')->getAlignment()->setHorizontal('right');
-			$this->excel->getActiveSheet()->setCellValue('B2', $this->profile_model->get_name($user->id_profile));
-			$this->excel->getActiveSheet()->mergeCells('B2:C2');
-			$this->excel->getActiveSheet()->setCellValue('D2', "Status : ")->getStyle('D2')->getAlignment()->setHorizontal('right');
-			$this->excel->getActiveSheet()->setCellValue('E2', ($user->active == 1 ? 'Active' : 'Inactive'));
-			$this->excel->getActiveSheet()->mergeCells('E2:F2');
+			$sheet->setCellValue('A2', 'Profile : ')->getStyle('A2')->getAlignment()->setHorizontal('right');
+			$sheet->setCellValue('B2', $this->profile_model->get_name($user->id_profile));
+			$sheet->mergeCells('B2:C2');
+			$sheet->setCellValue('D2', "Status : ")->getStyle('D2')->getAlignment()->setHorizontal('right');
+			$sheet->setCellValue('E2', ($user->active == 1 ? 'Active' : 'Inactive'));
+			$sheet->mergeCells('E2:F2');
 
 			$row = 4;
 
@@ -404,21 +394,18 @@ class Users extends PS_Controller{
 				{
 					if($gp->pm)
 					{
-						$this->excel->getActiveSheet()->setCellValue("A{$row}", $gp->name);
-						$this->excel->getActiveSheet()->setCellValue("B{$row}", 'ดู');
-						$this->excel->getActiveSheet()->setCellValue("C{$row}", 'เพิ่ม');
-						$this->excel->getActiveSheet()->setCellValue("D{$row}", 'แก้ไข');
-						$this->excel->getActiveSheet()->setCellValue("E{$row}", 'ลบ');
-						$this->excel->getActiveSheet()->setCellValue("F{$row}", 'อนุมัติ');
+						$sheet->setCellValue("A{$row}", $gp->name);
+						$sheet->setCellValue("B{$row}", 'ดู');
+						$sheet->setCellValue("C{$row}", 'เพิ่ม');
+						$sheet->setCellValue("D{$row}", 'แก้ไข');
+						$sheet->setCellValue("E{$row}", 'ลบ');
+						$sheet->setCellValue("F{$row}", 'อนุมัติ');
 
-
-						$color = array(
-							'type' => PHPExcel_Style_Fill::FILL_SOLID,
-							'startcolor' => array('rgb' => 'F28A8C')
-						);
-
-						$this->excel->getActiveSheet()->getStyle("A{$row}:F{$row}")->getFill()->applyFromArray($color);
-
+						$sheet->getStyle("A{$row}:F{$row}")
+							->getFill()
+							->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+							->getStartColor()
+							->setARGB('F28A8C');
 						$row++;
 
 						$menus = $this->menu->get_menus_by_group($gp->code);
@@ -431,12 +418,12 @@ class Users extends PS_Controller{
 								{
 									$pm = $this->permission_model->get_permission($menu->code, $user->id_profile);
 
-									$this->excel->getActiveSheet()->setCellValue("A{$row}", $menu->name);
-									$this->excel->getActiveSheet()->setCellValue("B{$row}", ($pm->can_view ? 'Y' : '-'));
-									$this->excel->getActiveSheet()->setCellValue("C{$row}", ($pm->can_add ? 'Y' : '-'));
-									$this->excel->getActiveSheet()->setCellValue("D{$row}", ($pm->can_edit ? 'Y' : '-'));
-									$this->excel->getActiveSheet()->setCellValue("E{$row}", ($pm->can_delete ? 'Y' : '-'));
-									$this->excel->getActiveSheet()->setCellValue("F{$row}", ($pm->can_approve ? 'Y' : '-'));
+									$sheet->setCellValue("A{$row}", $menu->name);
+									$sheet->setCellValue("B{$row}", ($pm->can_view ? 'Y' : '-'));
+									$sheet->setCellValue("C{$row}", ($pm->can_add ? 'Y' : '-'));
+									$sheet->setCellValue("D{$row}", ($pm->can_edit ? 'Y' : '-'));
+									$sheet->setCellValue("E{$row}", ($pm->can_delete ? 'Y' : '-'));
+									$sheet->setCellValue("F{$row}", ($pm->can_approve ? 'Y' : '-'));
 
 									$row++;
 								}
@@ -447,7 +434,7 @@ class Users extends PS_Controller{
 
 				if($row > 3)
 				{
-					$this->excel->getActiveSheet()->getStyle("B3:F{$row}")->getAlignment()->setHorizontal('center');
+					$sheet->getStyle("B3:F{$row}")->getAlignment()->setHorizontal('center');
 				}
 			} //--- endif group
 		}
@@ -456,7 +443,7 @@ class Users extends PS_Controller{
     $file_name = "{$uname} Permission.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
 	}
 
@@ -464,22 +451,24 @@ class Users extends PS_Controller{
 
 	public function export_all_permission()
 	{
+		ini_set('memory_limit', '2048M');
+		ini_set('max_execution_time', 600);
+
 		$this->load->model('users/permission_model');
 		$this->load->model('users/profile_model');
 		$token = $this->input->post('alltoken');
 		$all = $this->input->post('all') == 1 ? TRUE : FALSE;
-
 		$users = $this->user_model->get_all($all);
 
 		$ds = array();
 
 		$groups = $this->menu->get_active_menu_groups();
 
-		if( ! empty($groups))
+		if (! empty($groups))
 		{
-			foreach($groups as $group)
+			foreach ($groups as $group)
 			{
-				if($group->pm)
+				if ($group->pm)
 				{
 					$arr = array(
 						'name' => $group->name,
@@ -488,13 +477,13 @@ class Users extends PS_Controller{
 
 					$menus = $this->menu->get_menus_by_group($group->code);
 
-					if( ! empty($menus))
+					if (! empty($menus))
 					{
 						$items = array();
 
-						foreach($menus as $menu)
+						foreach ($menus as $menu)
 						{
-							if($menu->valid)
+							if ($menu->valid)
 							{
 								$items[] = array(
 									'code' => $menu->code,
@@ -505,95 +494,91 @@ class Users extends PS_Controller{
 
 						$arr['menus'] = $items;
 					}
-					
+
 					$ds[] = $arr;
 				}
 			}
 		}
 
-    //--- load excel library
-    $this->load->library('excel');
+		$excel = new Spreadsheet();
 
-		if( ! empty($users))
+		if (! empty($users))
 		{
 			$index = 0;
 
-			foreach($users as $user)
+			foreach ($users as $user)
 			{
-				$worksheet = new PHPExcel_Worksheet($this->excel, $user->uname);
-				$this->excel->addSheet($worksheet, $index);
-				$this->excel->setActiveSheetIndex($index);
+				$sheet = $index === 0 ? $excel->getActiveSheet() : $excel->createSheet();
+				$sheet->setTitle($user->uname);
 				$tabColor = $user->active == 1 ? '54c784' : 'c96b65';
-				$this->excel->getActiveSheet()->getTabColor()->setARGB($tabColor);
+				$sheet->getTabColor()->setARGB($tabColor);
 
-				$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth('30');
-				$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth('15');
-				$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth('15');
-				$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth('15');
-				$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth('15');
-				$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth('15');
+				$sheet->getColumnDimension('A')->setWidth('30');
+				$sheet->getColumnDimension('B')->setWidth('15');
+				$sheet->getColumnDimension('C')->setWidth('15');
+				$sheet->getColumnDimension('D')->setWidth('15');
+				$sheet->getColumnDimension('E')->setWidth('15');
+				$sheet->getColumnDimension('F')->setWidth('15');
 
-				$this->excel->getActiveSheet()->setCellValue('A1', 'User : ')->getStyle('A1')->getAlignment()->setHorizontal('right');
-				$this->excel->getActiveSheet()->setCellValue('B1', $user->uname);
-				$this->excel->getActiveSheet()->mergeCells('B1:C1');
+				$sheet->setCellValue('A1', 'User : ')->getStyle('A1')->getAlignment()->setHorizontal('right');
+				$sheet->setCellValue('B1', $user->uname);
+				$sheet->mergeCells('B1:C1');
 
-				$this->excel->getActiveSheet()->setCellValue('D1', 'Display name : ')->getStyle('D1')->getAlignment()->setHorizontal('right');
-				$this->excel->getActiveSheet()->setCellValue('E1', $user->name);
-				$this->excel->getActiveSheet()->mergeCells('E1:F1');
+				$sheet->setCellValue('D1', 'Display name : ')->getStyle('D1')->getAlignment()->setHorizontal('right');
+				$sheet->setCellValue('E1', $user->name);
+				$sheet->mergeCells('E1:F1');
 
-				$this->excel->getActiveSheet()->setCellValue('A2', 'Profile : ')->getStyle('A2')->getAlignment()->setHorizontal('right');
-				$this->excel->getActiveSheet()->setCellValue('B2', $this->profile_model->get_name($user->id_profile));
-				$this->excel->getActiveSheet()->mergeCells('B2:C2');
-				$this->excel->getActiveSheet()->setCellValue('D2', "Status : ")->getStyle('D2')->getAlignment()->setHorizontal('right');
-				$this->excel->getActiveSheet()->setCellValue('E2', ($user->active == 1 ? 'Active' : 'Inactive'));
-				$this->excel->getActiveSheet()->mergeCells('E2:F2');
+				$sheet->setCellValue('A2', 'Profile : ')->getStyle('A2')->getAlignment()->setHorizontal('right');
+				$sheet->setCellValue('B2', $this->profile_model->get_name($user->id_profile));
+				$sheet->mergeCells('B2:C2');
+				$sheet->setCellValue('D2', "Status : ")->getStyle('D2')->getAlignment()->setHorizontal('right');
+				$sheet->setCellValue('E2', ($user->active == 1 ? 'Active' : 'Inactive'));
+				$sheet->mergeCells('E2:F2');
 
 				$row = 4;
 
-				if( ! empty($ds))
+				if (! empty($ds))
 				{
-					foreach($ds as $rs)
+					foreach ($ds as $rs)
 					{
-						$this->excel->getActiveSheet()->setCellValue("A{$row}", $rs['name']);
-						$this->excel->getActiveSheet()->setCellValue("B{$row}", 'ดู');
-						$this->excel->getActiveSheet()->setCellValue("C{$row}", 'เพิ่ม');
-						$this->excel->getActiveSheet()->setCellValue("D{$row}", 'แก้ไข');
-						$this->excel->getActiveSheet()->setCellValue("E{$row}", 'ลบ');
-						$this->excel->getActiveSheet()->setCellValue("F{$row}", 'อนุมัติ');
+						$sheet->setCellValue("A{$row}", $rs['name']);
+						$sheet->setCellValue("B{$row}", 'ดู');
+						$sheet->setCellValue("C{$row}", 'เพิ่ม');
+						$sheet->setCellValue("D{$row}", 'แก้ไข');
+						$sheet->setCellValue("E{$row}", 'ลบ');
+						$sheet->setCellValue("F{$row}", 'อนุมัติ');
 
-
-						$color = array(
-							'type' => PHPExcel_Style_Fill::FILL_SOLID,
-							'startcolor' => array('rgb' => 'F28A8C')
-						);
-
-						$this->excel->getActiveSheet()->getStyle("A{$row}:F{$row}")->getFill()->applyFromArray($color);
+						$sheet->getStyle("A{$row}:F{$row}")
+							->getFill()
+							->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+							->getStartColor()
+							->setARGB('F28A8C');
 
 						$row++;
 
 						$menus = $rs['menus'];
 
-						if( ! empty($menus))
+						if (! empty($menus))
 						{
-							foreach($menus as $menu)
+							foreach ($menus as $menu)
 							{
 								$pm = $this->permission_model->get_permission($menu['code'], $user->id_profile);
 
-								$this->excel->getActiveSheet()->setCellValue("A{$row}", $menu['name']);
-								$this->excel->getActiveSheet()->setCellValue("B{$row}", ($pm->can_view ? 'Y' : '-'));
-								$this->excel->getActiveSheet()->setCellValue("C{$row}", ($pm->can_add ? 'Y' : '-'));
-								$this->excel->getActiveSheet()->setCellValue("D{$row}", ($pm->can_edit ? 'Y' : '-'));
-								$this->excel->getActiveSheet()->setCellValue("E{$row}", ($pm->can_delete ? 'Y' : '-'));
-								$this->excel->getActiveSheet()->setCellValue("F{$row}", ($pm->can_approve ? 'Y' : '-'));
+								$sheet->setCellValue("A{$row}", $menu['name']);
+								$sheet->setCellValue("B{$row}", ($pm->can_view ? 'Y' : '-'));
+								$sheet->setCellValue("C{$row}", ($pm->can_add ? 'Y' : '-'));
+								$sheet->setCellValue("D{$row}", ($pm->can_edit ? 'Y' : '-'));
+								$sheet->setCellValue("E{$row}", ($pm->can_delete ? 'Y' : '-'));
+								$sheet->setCellValue("F{$row}", ($pm->can_approve ? 'Y' : '-'));
 
 								$row++;
 							}
 						}
 					} //--- end foreach
 
-					if($row > 4)
+					if ($row > 4)
 					{
-						$this->excel->getActiveSheet()->getStyle("B3:F{$row}")->getAlignment()->setHorizontal('center');
+						$sheet->getStyle("B3:F{$row}")->getAlignment()->setHorizontal('center');
 					}
 				} //--- endif group
 
@@ -602,11 +587,11 @@ class Users extends PS_Controller{
 		}
 
 		setToken($token);
-    $file_name = "Users Permission.xlsx";
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
-    header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
-    $writer->save('php://output');
+		$file_name = "Users Permission.xlsx";
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
+		header('Content-Disposition: attachment;filename="' . $file_name . '"');
+		$writer = new Xlsx($excel);
+		$writer->save('php://output');
 	}
 
 

@@ -12,7 +12,7 @@ class Auto_complete extends CI_Controller
 
 	public function get_wx_code()
 	{
-		$txt = trim($_REQUEST['term']);
+		$txt = trim($_REQUEST['term'] ?? '');
 		$sc = array();
 
 		$this->db->select('code');
@@ -41,7 +41,7 @@ class Auto_complete extends CI_Controller
 
 	public function get_active_quotation()
 	{
-		$txt = $this->ms->escape_str(trim($_REQUEST['term']));
+		$txt = $this->ms->escape_str(trim($_REQUEST['term'] ?? ''));
 
 		$sc = array();
 		$qr  = "SELECT DocNum, CardCode, CardName ";
@@ -79,7 +79,7 @@ class Auto_complete extends CI_Controller
 
   public function get_sender()
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $sc = array();
     $rs = $this->db
     ->select('id, name')
@@ -101,7 +101,7 @@ class Auto_complete extends CI_Controller
 
   public function get_carplate()
   {
-    $txt = trim($_REQUEST['term']);
+    $txt = trim($_REQUEST['term'] ?? '');
 
     $sc = [];
 
@@ -133,7 +133,7 @@ class Auto_complete extends CI_Controller
 
   public function get_driver_name()
   {
-    $txt = trim($_REQUEST['term']);
+    $txt = trim($_REQUEST['term'] ?? '');
     $sc = [];
 
     if($txt != '*')
@@ -163,7 +163,7 @@ class Auto_complete extends CI_Controller
   {
     $sc = array();
     $adr = $this->db->select("province")
-    ->like('province', $_REQUEST['term'])
+    ->like('province', $_REQUEST['term'] ?? '')
     ->group_by('province')
     ->limit(20)->get('address_info');
 
@@ -185,7 +185,7 @@ class Auto_complete extends CI_Controller
 
   public function get_customer_code_and_name()
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $sc = array();
     $rs = $this->db
     ->select('code, name')
@@ -222,8 +222,8 @@ public function get_style_code()
   ->where('can_sell', 1)
   ->where('is_deleted', 0)
   ->group_start()
-  ->like('code', $_REQUEST['term'])
-  ->or_like('old_code', $_REQUEST['term'])
+  ->like('code', $_REQUEST['term'] ?? '')
+  ->or_like('old_code', $_REQUEST['term'] ?? '')
   ->group_end()
   ->order_by('code', 'ASC')
   ->limit(20);
@@ -249,8 +249,8 @@ public function get_prepare_style_code()
   ->where('can_sell', 1)
   ->where('is_deleted', 0)
   ->group_start()
-  ->like('code', $_REQUEST['term'])
-  ->or_like('old_code', $_REQUEST['term'])
+  ->like('code', $_REQUEST['term'] ?? '')
+  ->or_like('old_code', $_REQUEST['term'] ?? '')
   ->group_end()
   ->order_by('code', 'ASC')
   ->limit(20);
@@ -275,8 +275,8 @@ public function get_prepare_item_code()
   ->where('can_sell', 1)
   ->where('is_deleted', 0)
   ->group_start()
-  ->like('code', $_REQUEST['term'])
-  ->or_like('old_code', $_REQUEST['term'])
+  ->like('code', $_REQUEST['term'] ?? '')
+  ->or_like('old_code', $_REQUEST['term'] ?? '')
   ->group_end()
   ->order_by('code', 'ASC')
   ->limit(50);
@@ -297,7 +297,7 @@ public function get_prepare_item_code()
   public function sub_district()
   {
     $sc = array();
-    $adr = $this->db->like('tumbon', $_REQUEST['term'])->limit(20)->get('address_info');
+    $adr = $this->db->like('tumbon', $_REQUEST['term'] ?? '')->limit(20)->get('address_info');
     if($adr->num_rows() > 0)
     {
       foreach($adr->result() as $rs)
@@ -314,7 +314,7 @@ public function get_prepare_item_code()
   {
     $sc = array();
     $adr = $this->db->select("amphur, province, zipcode")
-    ->like('amphur', $_REQUEST['term'])
+    ->like('amphur', $_REQUEST['term'] ?? '')
     ->group_by('amphur')
     ->group_by('province')
     ->limit(20)->get('address_info');
@@ -334,7 +334,7 @@ public function get_prepare_item_code()
   {
     $sc = array();
     $adr = $this->db->select("province")
-    ->like('province', $_REQUEST['term'])
+    ->like('province', $_REQUEST['term'] ?? '')
     ->group_by('province')
     ->limit(20)->get('address_info');
     if($adr->num_rows() > 0)
@@ -352,7 +352,7 @@ public function get_prepare_item_code()
 	public function postcode()
   {
     $sc = array();
-    $adr = $this->db->like('zipcode', $_REQUEST['term'])->limit(20)->get('address_info');
+    $adr = $this->db->like('zipcode', $_REQUEST['term'] ?? '')->limit(20)->get('address_info');
     if($adr->num_rows() > 0)
     {
       foreach($adr->result() as $rs)
@@ -366,7 +366,7 @@ public function get_prepare_item_code()
 
   public function get_vendor_code_and_name()
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $sc = array();
     $qr = "SELECT CardCode, CardName FROM ";
     $qr .= "OCRD WHERE CardType = 'S' ";
@@ -392,7 +392,7 @@ public function get_prepare_item_code()
   //---- $all : FALSE => เฉพาะที่ยังไม่ปิด
   public function get_transform_code($all = FALSE)
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $sc = array();
 
     if($all === FALSE)
@@ -427,7 +427,7 @@ public function get_prepare_item_code()
   public function get_po_code($vendor = FALSE)
   {
     $sc = array();
-    $txt = convert($_REQUEST['term']);
+    $txt = convert($_REQUEST['term'] ?? '');
 
     //---- receive product if over due date or not
     $receive_due = getConfig('RECEIVE_OVER_DUE'); //--- 1 = receive , 0 = not receive
@@ -476,7 +476,7 @@ public function get_prepare_item_code()
   public function get_request_receive_po_code($vendor = NULL)
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
 
     $this->db
     ->select('code, po_code')
@@ -516,7 +516,7 @@ public function get_prepare_item_code()
   public function get_valid_lend_code($empID = NULL)
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $this->db->select('order_code');
     if($txt != '*')
     {
@@ -545,7 +545,7 @@ public function get_prepare_item_code()
   public function get_zone_code_and_name($warehouse = NULL)
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $this->db->select('code, name')->where('active', 1);
 
     if( ! empty($warehouse))
@@ -592,7 +592,7 @@ public function get_prepare_item_code()
 	public function get_common_zone_code_and_name($warehouse = NULL)
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $this->db
 		->select('zone.code AS code, zone.name AS name')
 		->from('zone')
@@ -645,7 +645,7 @@ public function get_prepare_item_code()
   public function get_zone_code()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $this->db->select('code, name')->where('active', 1);
     if($txt != '*')
     {
@@ -672,7 +672,7 @@ public function get_prepare_item_code()
   public function get_transform_zone()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $this->db
     ->select('zone.code AS code, zone.name AS name')
     ->from('zone')
@@ -715,7 +715,7 @@ public function get_prepare_item_code()
     $sc = array();
     if(!empty($empID))
     {
-      $txt = $_REQUEST['term'];
+      $txt = $_REQUEST['term'] ?? '';
       $this->db
       ->select('zone.code AS code, zone.name AS name')
       ->from('zone')
@@ -762,7 +762,7 @@ public function get_prepare_item_code()
   public function get_sponsor()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $qr = "SELECT BpCode, BpName FROM OOAT ";
     $qr .= "WHERE StartDate <= '".now()."' AND EndDate >= '".now()."' ";
 		$qr .= "AND Cancelled = 'N' ";
@@ -795,7 +795,7 @@ public function get_prepare_item_code()
   public function get_support()
   {
     $sc = array();
-    $txt = trim($_REQUEST['term']);
+    $txt = trim($_REQUEST['term'] ?? '');
 
     $qr = "SELECT BpCode, BpName FROM OOAT ";
 		$qr .= "WHERE StartDate <= '".now()."' AND EndDate >= '".now()."' ";
@@ -830,7 +830,7 @@ public function get_prepare_item_code()
   public function get_employee()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $qr  = "SELECT firstName, lastName, empID FROM OHEM ";
     if($txt != '*')
     {
@@ -861,7 +861,7 @@ public function get_prepare_item_code()
   public function get_user()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $this->db->select('uname, name');
     if($txt != '*')
     {
@@ -890,7 +890,7 @@ public function get_prepare_item_code()
   public function get_active_user_by_uname()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $this->db->select('id, uname, name')->where('active', 1);
 
     if($txt != '*')
@@ -936,11 +936,11 @@ public function get_prepare_item_code()
       ->where('zone_customer.customer_code', $customer_code)
       ->where('zone.active', 1);
 
-      if($_REQUEST['term'] != '*')
+      if(($_REQUEST['term'] ?? '') != '*')
       {
         $this->db->group_start();
-        $this->db->like('zone.code', $_REQUEST['term']);
-        $this->db->or_like('zone.name', $_REQUEST['term']);
+        $this->db->like('zone.code', $_REQUEST['term'] ?? '');
+        $this->db->or_like('zone.name', $_REQUEST['term'] ?? '');
         $this->db->group_end();
       }
 
@@ -976,11 +976,11 @@ public function get_prepare_item_code()
     ->where('zone.active', 1)
     ->limit(20);
 
-    if($_REQUEST['term'] != '*')
+    if(($_REQUEST['term'] ?? '') != '*')
     {
       $this->db->group_start();
-      $this->db->like('zone.code', $_REQUEST['term']);
-      $this->db->or_like('zone.name', $_REQUEST['term']);
+      $this->db->like('zone.code', $_REQUEST['term'] ?? '');
+      $this->db->or_like('zone.name', $_REQUEST['term'] ?? '');
       $this->db->group_end();
     }
 
@@ -1027,11 +1027,11 @@ public function get_prepare_item_code()
       ->where('zone.active', 1)
       ->where('zone_customer.customer_code', $customer_code);
 
-      if($_REQUEST['term'] != '*')
+      if(($_REQUEST['term'] ?? '') != '*')
       {
         $this->db->group_start();
-        $this->db->like('zone.code', $_REQUEST['term']);
-        $this->db->or_like('zone.name', $_REQUEST['term']);
+        $this->db->like('zone.code', $_REQUEST['term'] ?? '');
+        $this->db->or_like('zone.name', $_REQUEST['term'] ?? '');
         $this->db->group_end();
       }
 
@@ -1060,7 +1060,7 @@ public function get_prepare_item_code()
   public function get_product_code()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $rs = $this->db
     ->select('code, old_code')
     ->where('active', 1)
@@ -1089,7 +1089,7 @@ public function get_prepare_item_code()
   public function get_item_code()
   {
     $sc = array();
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $rs = $this->db
     ->select('code, old_code')
     ->where('active', 1)
@@ -1118,7 +1118,7 @@ public function get_prepare_item_code()
 
   public function get_warehouse_code_and_name()
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
 
     $sc  = array();
 
@@ -1148,7 +1148,7 @@ public function get_prepare_item_code()
 
   public function get_color_code_and_name()
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $sc = array();
     $this->db->select('code, name');
     if($txt != '*')
@@ -1176,7 +1176,7 @@ public function get_prepare_item_code()
 
   public function get_size_code_and_name()
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $sc = array();
     $this->db->select('code, name');
     if($txt != '*')
@@ -1204,7 +1204,7 @@ public function get_prepare_item_code()
 
   public function get_warehouse_by_role($role = 1)
   {
-    $txt = $_REQUEST['term'];
+    $txt = $_REQUEST['term'] ?? '';
     $sc = array();
 
     $rs = $this->db
@@ -1236,7 +1236,7 @@ public function get_prepare_item_code()
 
 	public function get_sap_invoice_code($customer_code)
 	{
-		$txt = trim($_REQUEST['term']);
+		$txt = trim($_REQUEST['term'] ?? '');
 		$sc = array();
 
 		$this->ms

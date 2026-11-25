@@ -21,6 +21,7 @@ class Customer_address_model extends CI_Model
   public function get_customer_ship_to_address($id)
   {
     $rs = $this->db->where('id', $id)->get('address_ship_to');
+
     if($rs->num_rows() > 0)
     {
       return $rs->row();
@@ -33,6 +34,7 @@ class Customer_address_model extends CI_Model
   public function get_ship_to_address($code)
   {
     $rs = $this->db->where('customer_code', $code)->get('address_ship_to');
+
     if($rs->num_rows() > 0)
     {
       return $rs->result();
@@ -88,11 +90,6 @@ class Customer_address_model extends CI_Model
   }
 
 
-
-
-
-
-  //----- Ship To
   public function add_sap_ship_to(array $ds = array())
   {
     if(!empty($ds))
@@ -104,7 +101,6 @@ class Customer_address_model extends CI_Model
   }
 
 
-
   public function update_sap_ship_to($code, $address, array $ds = array())
   {
     if(!empty($ds))
@@ -114,7 +110,6 @@ class Customer_address_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function get_max_line_num($code, $type = 'B')
@@ -131,6 +126,7 @@ class Customer_address_model extends CI_Model
     ->where('CardCode', $code)
     ->where('AdresType', $type)
     ->get('CRD1');
+
     if($rs->num_rows() > 0)
     {
       return TRUE;
@@ -146,9 +142,4 @@ class Customer_address_model extends CI_Model
     $rs = $this->db->query($qr);
     return $rs->row()->code;
   }
-
-
-
-} //--- end class
-
- ?>
+}

@@ -109,4 +109,4 @@ class Products extends REST_Controller
 			$this->response($arr, 400);
 		}
 	}
-} //--- end class
+}

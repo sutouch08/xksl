@@ -1,4 +1,6 @@
 <?php
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 class Auto_send_delivery extends PS_Controller
 {
   public $title = 'รายการที่รอส่งเข้า SAP';
@@ -128,12 +130,9 @@ class Auto_send_delivery extends PS_Controller
     }
     else
     {
-      $info = $this->upload->data();
-      $this->load->library('excel');
-      /// read file
-      $excel = PHPExcel_IOFactory::load($info['full_path']);
-      //get only the Cell Collection
-      $collection  = $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+      $info = $this->upload->data();      
+      $excel = IOFactory::load($info['full_path']);      
+      $collection  = $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
       if (! empty($collection))
       {
@@ -183,7 +182,6 @@ class Auto_send_delivery extends PS_Controller
 
     $this->_response($sc);
   }
-
 
 
   public function insert(array $ds = array())
@@ -236,6 +234,4 @@ class Auto_send_delivery extends PS_Controller
 
     $this->_response($sc);
   }
-
-} //--- end class
- ?>
+}

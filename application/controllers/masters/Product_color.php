@@ -25,19 +25,10 @@ class Product_color extends PS_Controller
       'color_group' => get_filter('color_group', 'color_group', ''),
       'status' => get_filter('status', 'color_status', 2)
     );
-
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
+		
+		$perpage = get_rows();
+		$segment = 4;
 		$rows = $this->product_color_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$color = $this->product_color_model->get_data($filter, $perpage, $this->uri->segment($segment));
 
@@ -50,7 +41,6 @@ class Product_color extends PS_Controller
     }
 
     $filter['data'] = $color;
-
 		$this->pagination->initialize($init);
     $this->load->view('masters/product_color/product_color_view', $filter);
   }
@@ -61,6 +51,7 @@ class Product_color extends PS_Controller
   {
     $code = $this->input->post('code');
     $active = $this->input->post('active') == 1 ? 0 :1;
+
     if($code)
     {
       $rs = $this->product_color_model->set_active($code, $active);
@@ -85,7 +76,7 @@ class Product_color extends PS_Controller
   {
     $sc = TRUE;
     $code = $this->input->post('code');
-    $name = trim($this->input->post('name'));
+    $name = trim($this->input->post('name') ?? '');
     $group_id = $this->input->post('group');
 
     if( ! empty($code) && ! empty($name))
@@ -278,6 +269,4 @@ class Product_color extends PS_Controller
     $filter = array('color_code', 'color_name', 'color_group', 'color_status');
     clear_filter($filter);
 	}
-
-}//--- end class
- ?>
+}

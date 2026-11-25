@@ -2,9 +2,9 @@
 function sender_in($txt)
 {
   $sc = "9999999";
-  $CI =& get_instance();
-  $CI->load->model('masters/sender_model');
-  $ds = $CI->sender_model->search($txt);
+  $ci =& get_instance();
+  $ci->load->model('masters/sender_model');
+  $ds = $ci->sender_model->search($txt);
 
   if(!empty($ds))
   {
@@ -17,8 +17,7 @@ function sender_in($txt)
   return $sc;
 }
 
-
-function select_sender($id = NULL)
+function select_sender($id = '')
 {
   $sc = "";
   $ci =& get_instance();
@@ -36,21 +35,17 @@ function select_sender($id = NULL)
   return $sc;
 }
 
-
-function select_common_sender($customer_code = NULL, $id = NULL)
+function select_common_sender($customer_code = '', $id = '')
 {
 	$sc = "";
 
-	$CI =& get_instance();
-  $CI->load->model('masters/sender_model');
-
-
-	$sender = $CI->sender_model->get_customer_sender_list($customer_code);
+	$ci =& get_instance();
+  $ci->load->model('masters/sender_model');
+	$sender = $ci->sender_model->get_customer_sender_list($customer_code);
 	$list = array();
 
 	if(!empty($sender))
 	{
-
 		if(!empty($sender->main_sender))
 		{
 			$list[] = $sender->main_sender;
@@ -61,16 +56,14 @@ function select_common_sender($customer_code = NULL, $id = NULL)
 			$list[] = $sender->second_sender;
 		}
 
-
 		if(!empty($sender->third_sender))
 		{
 			$list[] = $sender->third_sender;
 		}
 
-
 		if(!empty($list))
 		{
-			$ds = $CI->sender_model->get_sender_in($list);
+			$ds = $ci->sender_model->get_sender_in($list);
 
 			if(!empty($ds))
 			{
@@ -82,7 +75,7 @@ function select_common_sender($customer_code = NULL, $id = NULL)
 		}
 	}
 
-	$common = $CI->sender_model->get_common_list($list);
+	$common = $ci->sender_model->get_common_list($list);
 
 	if(!empty($common))
 	{
@@ -95,15 +88,11 @@ function select_common_sender($customer_code = NULL, $id = NULL)
 	return $sc;
 }
 
-
-
 function get_tracking($id_sender, $orderCode)
 {
 	$ci =& get_instance();
 	$ci->load->model('masters/sender_model');
-
 	$tracking = "";
-
 	$sender = $ci->sender_model->get($id_sender);
 
 	if( ! empty($sender))
@@ -117,6 +106,3 @@ function get_tracking($id_sender, $orderCode)
 
 	return $tracking;
 }
-
-
- ?>

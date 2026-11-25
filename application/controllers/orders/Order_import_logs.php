@@ -7,8 +7,7 @@ class Order_import_logs extends PS_Controller
 	public $menu_code = 'SOIMPL';
 	public $menu_group_code = 'SO';
   public $menu_sub_group_code = '';
-  public $filter;
-
+  
   public function __construct()
   {
     parent::__construct();
@@ -33,22 +32,16 @@ class Order_import_logs extends PS_Controller
 			redirect($this->home);
 		}
 		else
-		{
-			//--- แสดงผลกี่รายการต่อหน้า
+		{			
 			$perpage = get_rows();
-
-			$segment = 4; //-- url segment
-			$rows = $this->order_import_logs_model->count_rows($filter);
-			//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+			$segment = 4;
+			$rows = $this->order_import_logs_model->count_rows($filter);			
 			$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 			$logs = $this->order_import_logs_model->get_list($filter, $perpage, $this->uri->segment($segment));
-
 			$filter['logs'] = $logs;
-
 			$this->pagination->initialize($init);
 			$this->load->view('order_import_logs/logs_view', $filter);
 		}
-
   }
 
 	public function clear_filter()
@@ -64,6 +57,4 @@ class Order_import_logs extends PS_Controller
 
 		return clear_filter($filter);
 	}
-
-} //--- end classs
-?>
+}

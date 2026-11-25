@@ -8,20 +8,12 @@ class PS_Controller extends CI_Controller
   public $ms;
   public $mc;
   public $cn;
-  public $close_system;
-  public $notibars;
-  public $WC;
-  public $WT;
-  public $WS;
-  public $WU;
-  public $WQ;
-  public $WV;
-  public $RR;
-  public $WL;
+  public $close_system;  
   public $isViewer;
 	public $_user;
 	public $_SuperAdmin = FALSE;
   public $_dataDate = '2021-01-01';
+  public $error = "";
 
   public function __construct()
   {
@@ -57,7 +49,7 @@ class PS_Controller extends CI_Controller
       }
 
       //--- get permission for user
-      $this->pm = get_permission($this->menu_code, $uid, get_cookie('id_profile'));
+      $this->pm = get_permission($this->menu_code, $uid);
 
       $this->ms = $this->load->database('ms', TRUE); //--- SAP database
       $this->mc = $this->load->database('mc', TRUE); //--- Temp Database
@@ -68,24 +60,7 @@ class PS_Controller extends CI_Controller
       if( ! empty($dataDate))
       {
         $this->_dataDate = $dataDate;
-      }
-
-      if(empty($this->menu_code) && $this->isViewer === FALSE)
-      {
-        $this->notibars = getConfig('NOTI_BAR');
-        if($this->notibars == 1 )
-        {
-          $this->WC = get_permission('SOCCSO', $uid);
-          $this->WT = get_permission('SOCCTR', $uid);
-          $this->WS = get_permission('SOODSP', $uid);
-          $this->WU = get_permission('ICSUPP', $uid);
-          $this->WQ = get_permission('ICTRFM', $uid);
-          $this->WV = get_permission('ICTRFS', $uid);
-          $this->RR = get_permission('ICRQRC', $uid);
-          $this->WL = get_permission('ICLEND', $uid);
-        }
-
-      }
+      }      
     }
   }
 

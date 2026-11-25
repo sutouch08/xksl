@@ -1,5 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Zone extends PS_Controller
 {
   public $menu_code = 'DBZONE';
@@ -28,18 +31,10 @@ class Zone extends PS_Controller
       'is_pos_api' => get_filter('is_pos_api', 'z_pos_api', 'all'),
       'is_pickface' => get_filter('is_pickface', 'z_pickface', 'all')
     );
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-		$segment  = 4; //-- url segment
-		$rows     = $this->zone_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+		
+		$perpage = get_rows();		
+		$segment  = 4;
+		$rows = $this->zone_model->count_rows($filter);		
 		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$list = $this->zone_model->get_list($filter, $perpage, $this->uri->segment($segment));
 
@@ -52,7 +47,6 @@ class Zone extends PS_Controller
     }
 
     $filter['list'] = $list;
-
 		$this->pagination->initialize($init);
     $this->load->view('masters/zone/zone_list', $filter);
   }
@@ -60,7 +54,7 @@ class Zone extends PS_Controller
 
   public function generate_qrcode()
   {
-    $ds = json_decode($this->input->post('data'));
+    $ds = json_decode($this->input->post('data') ?? '{}');
     $list = [];
 
     if( ! empty($ds))
@@ -461,9 +455,9 @@ class Zone extends PS_Controller
   public function get_zone()
   {
     $sc = TRUE;
-    $code = trim($this->input->get('code'));
-    $whsCode = get_null(trim($this->input->get('warehouse_code')));
-    $whsName = get_null(trim($this->input->get('warehouse_name')));
+    $code = trim($this->input->get('code') ?? '');
+    $whsCode = get_null(trim($this->input->get('warehouse_code') ?? ''));
+    $whsName = get_null(trim($this->input->get('warehouse_name') ?? ''));
     $zone = $this->zone_model->get_zone($code, $whsCode);
 
     if(empty($zone))
@@ -488,9 +482,9 @@ class Zone extends PS_Controller
   public function get_zone_code()
   {
     $sc = TRUE;
-    if($this->input->get('barcode'))
+    if($this->input->get('barcode') ?? '')
     {
-      $barcode = trim($this->input->get('barcode'));
+      $barcode = trim($this->input->get('barcode') ?? '');
       $code = $this->zone_model->get_zone_code($barcode);
 
       if($code === FALSE)
@@ -507,8 +501,8 @@ class Zone extends PS_Controller
   public function get_warehouse_zone()
   {
     $sc = TRUE;
-    $code = trim($this->input->get('barcode'));
-    $warehouse_code = trim($this->input->get('warehouse_code'));
+    $code = trim($this->input->get('barcode') ?? '');
+    $warehouse_code = trim($this->input->get('warehouse_code') ?? '');
     if(!empty($code) && !empty($warehouse_code))
     {
       $zone = $this->zone_model->get_zone_detail_in_warehouse($code, $warehouse_code);
@@ -543,35 +537,35 @@ class Zone extends PS_Controller
 
     $list = $this->zone_model->get_list($ds);
 
-    //--- load excel library
-    $this->load->library('excel');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();
 
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Zone master data');
+    $excel->setActiveSheetIndex(0);
+    $sheet->setTitle('Zone master data');
 
     //--- set Table header
 
 
-    $this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'รหัสโซน');
-    $this->excel->getActiveSheet()->setCellValue('C1', 'ชื่อโซน');
-    $this->excel->getActiveSheet()->setCellValue('D1', 'รหัสคลัง');
-    $this->excel->getActiveSheet()->setCellValue('E1', 'คลังสินค้า');
-    $this->excel->getActiveSheet()->setCellValue('F1', 'รหัสเก่า');
-    $this->excel->getActiveSheet()->setCellValue('G1', 'เจ้าของโซน');
-    $this->excel->getActiveSheet()->setCellValue('H1', 'ผู้รับผิดชอบ');
-    $this->excel->getActiveSheet()->setCellValue('I1', 'Active');
+    $sheet->setCellValue('A1', 'ลำดับ');
+    $sheet->setCellValue('B1', 'รหัสโซน');
+    $sheet->setCellValue('C1', 'ชื่อโซน');
+    $sheet->setCellValue('D1', 'รหัสคลัง');
+    $sheet->setCellValue('E1', 'คลังสินค้า');
+    $sheet->setCellValue('F1', 'รหัสเก่า');
+    $sheet->setCellValue('G1', 'เจ้าของโซน');
+    $sheet->setCellValue('H1', 'ผู้รับผิดชอบ');
+    $sheet->setCellValue('I1', 'Active');
 
 
     //---- กำหนดความกว้างของคอลัมภ์
-    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(30);
-    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(30);
-    $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(30);
-    $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+    $sheet->getColumnDimension('B')->setWidth(20);
+    $sheet->getColumnDimension('C')->setWidth(30);
+    $sheet->getColumnDimension('D')->setWidth(20);
+    $sheet->getColumnDimension('E')->setWidth(30);
+    $sheet->getColumnDimension('F')->setWidth(20);
+    $sheet->getColumnDimension('G')->setWidth(20);
+    $sheet->getColumnDimension('H')->setWidth(30);
+    $sheet->getColumnDimension('I')->setWidth(15);
 
 
     $row = 2;
@@ -584,28 +578,28 @@ class Zone extends PS_Controller
       foreach($list as $rs)
       {
         //--- ลำดับ
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
+        $sheet->setCellValue('A'.$row, $no);
 
         //--- zone code
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->code);
+        $sheet->setCellValue('B'.$row, $rs->code);
 
         //--- zone name
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->name);
+        $sheet->setCellValue('C'.$row, $rs->name);
 
         //--- warehouse code
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->warehouse_code);
+        $sheet->setCellValue('D'.$row, $rs->warehouse_code);
 
         //---- waehouser name
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->warehouse_name);
+        $sheet->setCellValue('E'.$row, $rs->warehouse_name);
         //--- old code
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, "{$rs->old_code}");
+        $sheet->setCellValue('F'.$row, "{$rs->old_code}");
 
         //--- user name
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->uname);
+        $sheet->setCellValue('G'.$row, $rs->uname);
 
-        $this->excel->getActiveSheet()->setCellValue('H'.$row, $rs->display_name);
+        $sheet->setCellValue('H'.$row, $rs->display_name);
 
-        $this->excel->getActiveSheet()->setCellValue('I'.$row, ($rs->active ? 'Y' : 'N'));
+        $sheet->setCellValue('I'.$row, ($rs->active ? 'Y' : 'N'));
 
 
 
@@ -617,11 +611,10 @@ class Zone extends PS_Controller
       $file_name = "Zone Master Data.xlsx";
       header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
       header('Content-Disposition: attachment;filename="'.$file_name.'"');
-      $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+      $writer = new Xlsx($excel);
       $writer->save('php://output');
     }
   }
-
 
 
   public function clear_filter()
@@ -629,7 +622,4 @@ class Zone extends PS_Controller
     $filter = array('z_code', 'z_uname', 'z_customer', 'z_warehouse', 'z_active', 'z_pos_api', 'z_pickface');
     clear_filter($filter);
   }
-
-} //--- end class
-
- ?>
+}

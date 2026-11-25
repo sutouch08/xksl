@@ -31,17 +31,9 @@ class Customers extends PS_Controller
     $class = get_filter('class', 'class', '');
     $area = get_filter('area', 'area', '');
 
-		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-		$segment = 4; //-- url segment
+		$segment = 4;
 		$rows = $this->customers_model->count_rows($code, $name, $group, $kind, $type, $class, $area);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$customers = $this->customers_model->get_data($code, $name, $group, $kind, $type, $class, $area, $perpage, $this->uri->segment($segment));
     if(!empty($customers))
@@ -51,8 +43,7 @@ class Customers extends PS_Controller
         $rs->group  = $this->customer_group_model->get_name($rs->group_code);
         $rs->kind   = $this->customer_kind_model->get_name($rs->kind_code);
         $rs->type   = $this->customer_type_model->get_name($rs->type_code);
-        $rs->class  = $this->customer_class_model->get_name($rs->class_code);
-        //$rs->area   = $this->customer_area_model->get_name($rs->area_code);
+        $rs->class  = $this->customer_class_model->get_name($rs->class_code);       
       }
     }
 
@@ -288,16 +279,6 @@ class Customers extends PS_Controller
 
   public function clear_filter()
 	{
-		$this->session->unset_userdata('code');
-    $this->session->unset_userdata('name');
-    $this->session->unset_userdata('group');
-    $this->session->unset_userdata('kind');
-    $this->session->unset_userdata('type');
-    $this->session->unset_userdata('class');
-    $this->session->unset_userdata('area');
-
-		echo 'done';
+    clear_filter(['code', 'name', 'group', 'kind', 'type', 'class', 'area']);		
 	}
 }
-
-?>

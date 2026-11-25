@@ -6,9 +6,7 @@ class Receive_transform extends PS_Controller
   public $menu_code = 'ICTRRC';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'RECEIVE';
-	public $title = 'รับสินค้าจากการแปรสภาพ';
-  public $filter;
-  public $error;
+	public $title = 'รับสินค้าจากการแปรสภาพ';  
   public $required_remark = TRUE; //--- บังคับใส่หมายเหตุ
 
   public function __construct()
@@ -140,7 +138,7 @@ class Receive_transform extends PS_Controller
     $sc = TRUE;
     $this->load->model('inventory/movement_model');
     $code = $this->input->post('code');
-    $remark = trim($this->input->post('accept_remark'));
+    $remark = trim($this->input->post('accept_remark') ?? '');
 
     $ex = 0;
 
@@ -251,7 +249,7 @@ class Receive_transform extends PS_Controller
             if(! $this->export->export_receive_transform($doc->code))
             {
               $ex = 1; //--- export error
-              $this->error = trim($this->export->error);
+              $this->error = ($this->export->error);
             }
           } //--- end export
         }
@@ -459,7 +457,7 @@ class Receive_transform extends PS_Controller
                   if(! $this->export->export_receive_transform($code))
                   {
                     $ex = 1; //--- export error
-                    $this->error = trim($this->export->error);
+                    $this->error = ($this->export->error);
                   }
                 }
               }
@@ -591,7 +589,7 @@ class Receive_transform extends PS_Controller
       {
         $this->load->model('inventory/movement_model');
         $code = $this->input->post('receive_code');
-        $reason = trim($this->input->post('reason'));
+        $reason = trim($this->input->post('reason') ?? '');
         $force_cancel = $this->input->post('force_cancel') == 1 ? TRUE : FALSE;
 
         $doc = $this->receive_transform_model->get($code);
@@ -1009,7 +1007,7 @@ class Receive_transform extends PS_Controller
     if(! $this->export->export_receive_transform($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = ($this->export->error);
     }
 
     return $sc;

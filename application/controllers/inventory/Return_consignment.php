@@ -6,9 +6,7 @@ class Return_consignment extends PS_Controller
   public $menu_code = 'ICRTSM';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'RETURN';
-	public $title = 'ลดหนี้ฝากขายเทียม';
-  public $filter;
-  public $error;	
+	public $title = 'ลดหนี้ฝากขายเทียม';  	
   public $required_remark = 1;
 
   public function __construct()
@@ -309,9 +307,9 @@ class Return_consignment extends PS_Controller
     if($this->input->post('date_add'))
     {
       $date_add = db_date($this->input->post('date_add'), TRUE);
-      $invoice = trim($this->input->post('invoice'));
-      $customer_code = trim($this->input->post('customer_code'));
-      $remark = trim($this->input->post('remark'));
+      $invoice = trim($this->input->post('invoice') ?? '');
+      $customer_code = trim($this->input->post('customer_code') ?? '');
+      $remark = trim($this->input->post('remark') ?? '');
       $gp = empty($this->input->post('gp')) ? 0 : $this->input->post('gp');
       $from_zone = $this->input->post('from_zone');
       $to_zone = $this->input->post('zone_code');
@@ -488,11 +486,11 @@ class Return_consignment extends PS_Controller
     {
       $code = $this->input->post('return_code');
       $date_add = db_date($this->input->post('date_add'), TRUE);
-      $invoice = trim($this->input->post('invoice'));
+      $invoice = trim($this->input->post('invoice') ?? '');
 
-      $customer_code = trim($this->input->post('customer_code'));
+      $customer_code = trim($this->input->post('customer_code') ?? '');
       $from_zone = $this->zone_model->get($this->input->post('from_zone'));
-      $remark = trim($this->input->post('remark'));
+      $remark = trim($this->input->post('remark') ?? '');
       $gp = empty($this->input->post('gp')) ? 0 : $this->input->post('gp');
 
       $zone = $this->zone_model->get($this->input->post('zone_code'));
@@ -594,7 +592,7 @@ class Return_consignment extends PS_Controller
 	public function load_stock_in_zone()
 	{
 		$sc = TRUE;
-		$code = trim($this->input->post('code'));
+		$code = trim($this->input->post('code') ?? '');
 
 		if(!empty($code))
 		{
@@ -931,7 +929,7 @@ class Return_consignment extends PS_Controller
   {
     $sc = TRUE;
 
-    $reason = trim($this->input->post('reason'));
+    $reason = trim($this->input->post('reason') ?? '');
     $force_cancel = $this->input->post('force_cancel') == 1 ? TRUE : FALSE;
 
     if($this->pm->can_delete)
@@ -1022,7 +1020,7 @@ class Return_consignment extends PS_Controller
 	public function pull_back()
 	{
 		$sc = TRUE;
-		$code = trim($this->input->post('code'));
+		$code = trim($this->input->post('code') ?? '');
 
 		if($this->_SuperAdmin)
 		{
@@ -1139,7 +1137,7 @@ class Return_consignment extends PS_Controller
   {
     if($this->input->post('barcode'))
     {
-      $barcode = trim($this->input->post('barcode'));
+      $barcode = trim($this->input->post('barcode') ?? '');
       $item = $this->products_model->get_product_by_barcode($barcode);
       if(!empty($item))
       {
@@ -1157,7 +1155,7 @@ class Return_consignment extends PS_Controller
   {
     if($this->input->post('item_code'))
     {
-      $code = trim($this->input->post('item_code'));
+      $code = trim($this->input->post('item_code') ?? '');
       $item = $this->products_model->get($code);
       if(!empty($item))
       {
@@ -1175,7 +1173,7 @@ class Return_consignment extends PS_Controller
 
 	public function get_invoice_gp()
 	{
-		$invoice = trim($this->input->get('invoice'));
+		$invoice = trim($this->input->get('invoice') ?? '');
 		if(!empty($invoice))
 		{
 			$qr  = "SELECT DISTINCT OINV.DocTotal, INV1.DiscPrcnt
@@ -1207,7 +1205,7 @@ class Return_consignment extends PS_Controller
     if(! $this->export->export_return_consignment($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = ($this->export->error);
     }
 
     return $sc;

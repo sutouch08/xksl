@@ -1,13 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+  
 class Consignment_order extends PS_Controller
 {
   public $menu_code = 'ACCMOD';
 	public $menu_group_code = 'AC';
   public $menu_sub_group_code = '';
 	public $title = 'ตัดยอดฝากขาย(เทียม)';
-  public $filter;
-  public $error;
+  
   public function __construct()
   {
     parent::__construct();
@@ -60,11 +62,11 @@ class Consignment_order extends PS_Controller
   }
 
 
-
   public function add_new()
   {
     $this->load->view('account/consignment_order/consignment_order_add');
   }
+
 
   public function is_exists($code, $old_code = NULL)
   {
@@ -78,6 +80,7 @@ class Consignment_order extends PS_Controller
       echo 'not_exists';
     }
   }
+
 
   public function add()
   {
@@ -142,7 +145,6 @@ class Consignment_order extends PS_Controller
   }
 
 
-
   public function edit($code)
   {
     $this->load->helper('print');
@@ -181,7 +183,7 @@ class Consignment_order extends PS_Controller
       {
         $arr = array(
           'date_add' => db_date($this->input->post('date'), TRUE),
-          'remark' => trim($this->input->post('remark'))
+          'remark' => trim($this->input->post('remark') ?? '')
         );
 
         if(! $this->consignment_order_model->update($code, $arr))
@@ -249,7 +251,6 @@ class Consignment_order extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
-
 
 
   public function view_detail($code)
@@ -400,7 +401,6 @@ class Consignment_order extends PS_Controller
   }
 
 
-
   //---- add or update detail row by key in
   public function add_details($code)
   {
@@ -516,9 +516,6 @@ class Consignment_order extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
-
-
-
 
 
   public function save_consign($code)
@@ -663,7 +660,6 @@ class Consignment_order extends PS_Controller
   }
 
 
-
   public function unsave_consign($code)
   {
     $sc = TRUE;
@@ -753,7 +749,6 @@ class Consignment_order extends PS_Controller
   }
 
 
-
   public function delete_detail($id)
   {
     $sc = TRUE;
@@ -782,7 +777,6 @@ class Consignment_order extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
-
 
 
   public function delete_all_details($code)
@@ -835,8 +829,7 @@ class Consignment_order extends PS_Controller
 
   public function import_excel_file($code)
   {
-    $sc = TRUE;
-    $this->load->library('excel');
+    $sc = TRUE;    
     $this->load->model('stock/stock_model');
 
     $file = isset( $_FILES['excel'] ) ? $_FILES['excel'] : FALSE;
@@ -863,9 +856,9 @@ class Consignment_order extends PS_Controller
         {
           $info = $this->upload->data();
           /// read file
-  				$excel = PHPExcel_IOFactory::load($info['full_path']);
+  				$excel = IOFactory::load($info['full_path']);
   				//get only the Cell Collection
-          $collection	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+          $collection	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
           $i = 1;
 
@@ -1306,23 +1299,22 @@ class Consignment_order extends PS_Controller
 
   public function get_sample_file($token)
   {
-    //--- load excel library
-    $this->load->library('excel');
+    $excel = new Spreadsheet();
 
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Sample');
+    $excel->setActiveSheetIndex(0);
+    $excel->getActiveSheet()->setTitle('Sample');
 
     //--- header
-    $this->excel->getActiveSheet()->setCellValue('A1', 'Items');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'Price');
-    $this->excel->getActiveSheet()->setCellValue('C1', 'Qty');
-    $this->excel->getActiveSheet()->setCellValue('D1', 'Discount');
+    $excel->getActiveSheet()->setCellValue('A1', 'Items');
+    $excel->getActiveSheet()->setCellValue('B1', 'Price');
+    $excel->getActiveSheet()->setCellValue('C1', 'Qty');
+    $excel->getActiveSheet()->setCellValue('D1', 'Discount');
 
     //--- sample data
-    $this->excel->getActiveSheet()->setCellValue('A2', 'WA-1234-AA-L');
-    $this->excel->getActiveSheet()->setCellValue('B2', '399');
-    $this->excel->getActiveSheet()->setCellValue('C2', '2');
-    $this->excel->getActiveSheet()->setCellValue('D2', '20%+5%');
+    $excel->getActiveSheet()->setCellValue('A2', 'WA-1234-AA-L');
+    $excel->getActiveSheet()->setCellValue('B2', '399');
+    $excel->getActiveSheet()->setCellValue('C2', '2');
+    $excel->getActiveSheet()->setCellValue('D2', '20%+5%');
 
 
     setToken($token);
@@ -1330,7 +1322,7 @@ class Consignment_order extends PS_Controller
     $file_name = "Consign_sample.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
   }
 
@@ -1409,7 +1401,7 @@ class Consignment_order extends PS_Controller
     if(! $this->export->export_consignment_order($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = trim($this->export->error ?? '');
     }
 
     return $sc;

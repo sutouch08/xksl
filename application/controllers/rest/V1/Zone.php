@@ -17,8 +17,7 @@ class Zone extends REST_Controller
 	{
     $rs = $this->db
     ->from('zone AS z')
-    ->join('warehouse AS w', 'z.warehouse_code = w.code', 'left')
-    //->where('w.role', 2)
+    ->join('warehouse AS w', 'z.warehouse_code = w.code', 'left')    
     ->where('z.name !=', '')
     ->where('z.name IS NOT NULL', NULL, FALSE)
     ->count_all_results();
@@ -35,7 +34,7 @@ class Zone extends REST_Controller
 	public function getUpdateZone_post()
 	{
 		$json = file_get_contents("php://input");
-		$ds = json_decode($json);
+		$ds = json_decode($json ?? '{}');
 
 		if(! empty($ds))
 		{
@@ -47,7 +46,6 @@ class Zone extends REST_Controller
       ->select('w.code AS warehouse_code, w.name AS warehouse_name, w.is_consignment')
       ->from('zone AS z')
       ->join('warehouse AS w', 'z.warehouse_code = w.code', 'left')
-      //->where('w.role', 2)
       ->where('z.name !=', '')
       ->where('z.name IS NOT NULL', NULL, FALSE)
       ->limit($limit, $offset)
@@ -82,5 +80,4 @@ class Zone extends REST_Controller
 			$this->response($arr, 400);
 		}
 	}
-
-} //--- end class
+}

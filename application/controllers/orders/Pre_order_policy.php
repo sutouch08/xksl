@@ -75,7 +75,7 @@ class Pre_order_policy extends PS_Controller
 
     if($this->pm->can_add)
     {
-      $name = trim($this->input->post('name'));
+      $name = trim($this->input->post('name') ?? '');
       $status = $this->input->post('status') == 1 ? 1 : 0;
       $start_date = $this->input->post('start_date');
       $end_date = $this->input->post('end_date');
@@ -155,7 +155,7 @@ class Pre_order_policy extends PS_Controller
     if($this->pm->can_add OR $this->pm->can_edit)
     {
       $id = $this->input->post('id');
-      $name = trim($this->input->post('name'));
+      $name = trim($this->input->post('name') ?? '');
       $status = $this->input->post('status') == 1 ? 1 : 0;
       $start_date = $this->input->post('start_date');
       $end_date = $this->input->post('end_date');
@@ -358,7 +358,7 @@ class Pre_order_policy extends PS_Controller
   {
     $sc = TRUE;
     $id_policy = $this->input->post('id');
-    $style_code = trim($this->input->post('style_code'));
+    $style_code = trim($this->input->post('style_code') ?? '');
 
     $result = array();
 

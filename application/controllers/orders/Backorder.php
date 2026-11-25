@@ -4,9 +4,7 @@ class Backorder extends PS_Controller
   public $menu_code = 'SOBACK';
 	public $menu_group_code = 'SO';
   public $menu_sub_group_code = 'ORDER';
-	public $title = 'Backorder';
-  public $filter;
-  public $error;
+	public $title = 'Backorder';  
   public $segment = 4;
 
   public function __construct()
@@ -51,9 +49,5 @@ class Backorder extends PS_Controller
 
       $this->load->view('backorder/backorder_list', $filter);
     }
-
   }
-
-
 }
-?>

@@ -186,10 +186,5 @@ class Receive extends REST_Controller
       $this->response($arr, 200);
 		}
 
-	}//-- end create
-
-
+	}
 }
-
-//--- end class
-?>

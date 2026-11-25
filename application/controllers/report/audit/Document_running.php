@@ -1,91 +1,87 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Document_running extends PS_Controller
 {
-  public $menu_code = 'RADRUN';
+	public $menu_code = 'RADRUN';
 	public $menu_group_code = 'RE';
-  public $menu_sub_group_code = 'REAUDIT';
+	public $menu_sub_group_code = 'REAUDIT';
 	public $title = 'รายงานทะเบียนคุมเอกสารแยกตามประเภท';
-  public $filter;
-	public $wms;
 	public $limit = 2000;
 
-  public function __construct()
-  {
-    parent::__construct();
-    $this->home = base_url().'report/audit/document_running';
-    $this->load->model('report/audit/document_model');
-  }
+	public function __construct()
+	{
+		parent::__construct();
+		$this->home = base_url() . 'report/audit/document_running';
+		$this->load->model('report/audit/document_model');
+	}
 
-  public function index()
-  {
-    $this->load->view('report/audit/document_running');
-  }
+	public function index()
+	{
+		$this->load->view('report/audit/document_running');
+	}
 
+	public function do_export()
+	{
+		ini_set('memory_limit', '2048M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
+		ini_set('sqlsrv.ClientBufferMaxKBSize', '2097152'); // Setting to 2048M
+		ini_set('sqlsrv.client_buffer_max_kb_size', '2097152'); // Setting to 512M - for pdo_sqlsrv
 
-
-  public function do_export()
-  {
-    ini_set('memory_limit','2048M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
-    ini_set('sqlsrv.ClientBufferMaxKBSize','2097152'); // Setting to 2048M
-    ini_set('sqlsrv.client_buffer_max_kb_size','2097152'); // Setting to 512M - for pdo_sqlsrv
-    
-    $token = $this->input->post('token');
+		$token = $this->input->post('token');
 		$role = $this->input->post('role');
 		$all  = $this->input->post('allRole') ? TRUE : FALSE;
 		$fromDate = $this->input->post('fromDate');
-    $toDate = $this->input->post('toDate');
+		$toDate = $this->input->post('toDate');
 
-    //--- load excel library
-    $this->load->library('excel');
-
+		$excel = new Spreadsheet();
 		$index = 0;
 
-		if(!empty($role['WO']) OR $all)
+		if (!empty($role['WO']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WO");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WO');
+			$sheet = $excel->getActiveSheet();
+			$sheet->setTitle('WO');
 
 			$index++;
 
 			//--- set report title header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP DO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'ช่องทางขาย');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('G1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP DO');
+			$sheet->setCellValue('E1', 'ช่องทางขาย');
+			$sheet->setCellValue('F1', 'สถานะ');
+			$sheet->setCellValue('G1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('S', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->channels_name);
-					$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->channels_name);
+					$sheet->setCellValue('F' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->reason);
+						$sheet->setCellValue('G' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -95,48 +91,42 @@ class Document_running extends PS_Controller
 		} //--- end WO
 
 
-		if(! empty($role['WS']) OR $all)
+		if (! empty($role['WS']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WS");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WS');
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WS');
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$index++;
-
-			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
-
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP DO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP DO');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('P', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -146,49 +136,45 @@ class Document_running extends PS_Controller
 		} //--- end WS
 
 
-		if(!empty($role['WU']) OR $all)
+		if (!empty($role['WU']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WU");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WU');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WU');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP DO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP DO');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('U', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -198,49 +184,45 @@ class Document_running extends PS_Controller
 		} //--- end WU
 
 
-		if(!empty($role['WC']) OR $all)
+		if (!empty($role['WC']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WC");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WC');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WC');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP DO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP DO');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('C', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -250,48 +232,44 @@ class Document_running extends PS_Controller
 		} //--- end WC
 
 
-		if(!empty($role['WT']) OR $all)
+		if (!empty($role['WT']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WT");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WT');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WT');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP DO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP DO');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('N', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -301,48 +279,44 @@ class Document_running extends PS_Controller
 		} //--- end WT
 
 
-		if(!empty($role['WQ']) OR $all)
+		if (!empty($role['WQ']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WQ");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WQ');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WQ');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP TR');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP TR');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('T', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -351,48 +325,44 @@ class Document_running extends PS_Controller
 			}
 		} //--- end WQ
 
-		if(!empty($role['WV']) OR $all)
+		if (!empty($role['WV']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WV");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WV');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WV');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP TR');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP TR');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('Q', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -402,48 +372,44 @@ class Document_running extends PS_Controller
 		} //--- end WV
 
 
-		if(!empty($role['WL']) OR $all)
+		if (!empty($role['WL']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WL");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WL');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WL');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP TR');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP TR');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->getOrder('L', $fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->state_name);
-					if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $rs->state_name);
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 
 					$no++;
@@ -453,48 +419,44 @@ class Document_running extends PS_Controller
 		} //--- end WL
 
 
-		if(!empty($role['WM']) OR $all)
+		if (!empty($role['WM']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WM");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WM');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WM');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP DO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP DO');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->WM($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -503,48 +465,44 @@ class Document_running extends PS_Controller
 		} //--- end WM
 
 
-		if(!empty($role['WD']) OR $all)
+		if (!empty($role['WD']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WD");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WD');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WD');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP DO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP DO');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->WD($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -553,49 +511,45 @@ class Document_running extends PS_Controller
 		} //--- end WD
 
 
-		if(!empty($role['WR']) OR $all)
+		if (!empty($role['WR']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WR");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WR');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WR');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP GRPO');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP GRPO');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->WR($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $this->statusLabel($rs->status, $rs->is_expire));
-          if($rs->status == 2)
-          {
-            $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
-          }
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $this->statusLabel($rs->status, $rs->is_expire));
+					if ($rs->status == 2)
+					{
+						$sheet->setCellValue('F' . $row, $rs->reason);
+					}
 
 					$no++;
 					$row++;
@@ -604,48 +558,44 @@ class Document_running extends PS_Controller
 		} //--- end WR
 
 
-		if(!empty($role['WW']) OR $all)
+		if (!empty($role['WW']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WW");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WW');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WW');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP TR');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP TR');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->WW($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $this->statusLabel($rs->status, $rs->is_expire));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $this->statusLabel($rs->status, $rs->is_expire));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->reason);
+						$sheet->setCellValue('F' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -654,45 +604,45 @@ class Document_running extends PS_Controller
 		} //--- end WW
 
 
-    if(!empty($role['MV']) OR $all)
+		if (!empty($role['MV']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "MV");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('MV');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('MV');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP TR');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP TR');
+			$sheet->setCellValue('E1', 'สถานะ');
+			$sheet->setCellValue('F1', 'หมายเหตุ');
 
 			$data = $this->document_model->MV($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-	        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $this->statusLabel($rs->status, $rs->is_expire));
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->inv_code);
+					$sheet->setCellValue('E' . $row, $this->statusLabel($rs->status, $rs->is_expire));
+					if (!empty($rs->reason))
+					{
+						$sheet->setCellValue('F' . $row, $rs->reason);
+					}
 
 					$no++;
 					$row++;
@@ -701,50 +651,46 @@ class Document_running extends PS_Controller
 		} //--- end MV
 
 
-		if(!empty($role['WG']) OR $all)
+		if (!empty($role['WG']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WG");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WG');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WG');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'Base Ref');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'SAP Goods Issue');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'Base Ref');
+			$sheet->setCellValue('E1', 'SAP Goods Issue');
+			$sheet->setCellValue('F1', 'สถานะ');
+			$sheet->setCellValue('G1', 'หมายเหตุ');
 
 			$data = $this->document_model->WG($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-					$this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->reference);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('F'.$row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'WMS'))));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->reference);
+					$sheet->setCellValue('E' . $row, $rs->inv_code);
+					$sheet->setCellValue('F' . $row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'WMS'))));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->reason);
+						$sheet->setCellValue('G' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -753,50 +699,46 @@ class Document_running extends PS_Controller
 		} //--- end WG
 
 
-		if(!empty($role['RT']) OR $all)
+		if (!empty($role['RT']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "RT");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('RT');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('RT');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'Base Ref');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'SAP Goods Issue');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'Base Ref');
+			$sheet->setCellValue('E1', 'SAP Goods Issue');
+			$sheet->setCellValue('F1', 'สถานะ');
+			$sheet->setCellValue('G1', 'หมายเหตุ');
 
 			$data = $this->document_model->RT($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-					$this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->reference);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('F'.$row, $this->statusLabel($rs->status, $rs->is_expire));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->reference);
+					$sheet->setCellValue('E' . $row, $rs->inv_code);
+					$sheet->setCellValue('F' . $row, $this->statusLabel($rs->status, $rs->is_expire));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->reason);
+						$sheet->setCellValue('G' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -805,102 +747,94 @@ class Document_running extends PS_Controller
 		} //--- end RT
 
 
-		if(!empty($role['RN']) OR $all)
+		if (!empty($role['RN']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "RN");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('RN');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('RN');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'Base Ref');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'SAP TR');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'Base Ref');
+			$sheet->setCellValue('E1', 'SAP TR');
+			$sheet->setCellValue('F1', 'สถานะ');
+			$sheet->setCellValue('G1', 'หมายเหตุ');
 
 			$data = $this->document_model->RN($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-					$this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->reference);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('F'.$row, $this->statusLabel($rs->status, $rs->is_expire));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->reference);
+					$sheet->setCellValue('E' . $row, $rs->inv_code);
+					$sheet->setCellValue('F' . $row, $this->statusLabel($rs->status, $rs->is_expire));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->reason);
+						$sheet->setCellValue('G' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
 				}
 			}
-		} //--- end RT
+		} //--- end RN
 
 
-		if(!empty($role['SM']) OR $all)
+		if (!empty($role['SM']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "SM");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('SM');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('SM');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'Base Ref');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'SAP SM');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'Base Ref');
+			$sheet->setCellValue('E1', 'SAP SM');
+			$sheet->setCellValue('F1', 'สถานะ');
+			$sheet->setCellValue('G1', 'หมายเหตุ');
 
 			$data = $this->document_model->SM($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-					$this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->reference);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('F'.$row, $this->statusLabel($rs->status, $rs->is_expire));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->reference);
+					$sheet->setCellValue('E' . $row, $rs->inv_code);
+					$sheet->setCellValue('F' . $row, $this->statusLabel($rs->status, $rs->is_expire));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->reason);
+						$sheet->setCellValue('G' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -909,50 +843,46 @@ class Document_running extends PS_Controller
 		} //--- end SM
 
 
-		if(!empty($role['CN']) OR $all)
+		if (!empty($role['CN']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "CN");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('CN');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('CN');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'Base Ref');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'SAP SM');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'Base Ref');
+			$sheet->setCellValue('E1', 'SAP SM');
+			$sheet->setCellValue('F1', 'สถานะ');
+			$sheet->setCellValue('G1', 'หมายเหตุ');
 
 			$data = $this->document_model->CN($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-					$this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->reference);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->inv_code);
-	        $this->excel->getActiveSheet()->setCellValue('F'.$row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'WMS'))));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->reference);
+					$sheet->setCellValue('E' . $row, $rs->inv_code);
+					$sheet->setCellValue('F' . $row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'WMS'))));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->reason);
+						$sheet->setCellValue('G' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -961,50 +891,46 @@ class Document_running extends PS_Controller
 		} //--- end CN
 
 
-		if(!empty($role['WA']) OR $all)
+		if (!empty($role['WA']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "WA");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('WA');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('WA');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(20);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'SAP Goods Issue');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'SAP Goods Receipt');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'SAP Goods Issue');
+			$sheet->setCellValue('E1', 'SAP Goods Receipt');
+			$sheet->setCellValue('F1', 'สถานะ');
+			$sheet->setCellValue('G1', 'หมายเหตุ');
 
 			$data = $this->document_model->WA($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-					$this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->issue_code);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->receive_code);
-	        $this->excel->getActiveSheet()->setCellValue('F'.$row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->issue_code);
+					$sheet->setCellValue('E' . $row, $rs->receive_code);
+					$sheet->setCellValue('F' . $row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->reason);
+						$sheet->setCellValue('G' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -1012,53 +938,49 @@ class Document_running extends PS_Controller
 			}
 		} //--- end WA
 
-		if(!empty($role['AC']) OR $all)
+		if (!empty($role['AC']) or $all)
 		{
-			$worksheet = new PHPExcel_Worksheet($this->excel, "AC");
-			$this->excel->addSheet($worksheet, $index);
-			$this->excel->setActiveSheetIndex($index);
-			$this->excel->getActiveSheet()->setTitle('AC');
-
-			$index++;
+			$sheet = $excel->createSheet();
+			$sheet->setTitle('AC');
 
 			//--- set Table header
-			$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(8);
-			$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-			$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
-      $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
+			$sheet->getColumnDimension('A')->setWidth(8);
+			$sheet->getColumnDimension('B')->setWidth(15);
+			$sheet->getColumnDimension('C')->setWidth(15);
+			$sheet->getColumnDimension('D')->setWidth(15);
+			$sheet->getColumnDimension('E')->setWidth(15);
+			$sheet->getColumnDimension('F')->setWidth(15);
+			$sheet->getColumnDimension('G')->setWidth(15);
+			$sheet->getColumnDimension('H')->setWidth(15);
 
-			$this->excel->getActiveSheet()->setCellValue('A1', 'ลำดับ');
-			$this->excel->getActiveSheet()->setCellValue('B1', 'วันที่');
-			$this->excel->getActiveSheet()->setCellValue('C1', 'เลขที่');
-			$this->excel->getActiveSheet()->setCellValue('D1', 'Base ref');
-			$this->excel->getActiveSheet()->setCellValue('E1', 'SAP Goods Issue');
-			$this->excel->getActiveSheet()->setCellValue('F1', 'SAP Goods Receipt');
-			$this->excel->getActiveSheet()->setCellValue('G1', 'สถานะ');
-      $this->excel->getActiveSheet()->setCellValue('H1', 'หมายเหตุ');
+			$sheet->setCellValue('A1', 'ลำดับ');
+			$sheet->setCellValue('B1', 'วันที่');
+			$sheet->setCellValue('C1', 'เลขที่');
+			$sheet->setCellValue('D1', 'Base ref');
+			$sheet->setCellValue('E1', 'SAP Goods Issue');
+			$sheet->setCellValue('F1', 'SAP Goods Receipt');
+			$sheet->setCellValue('G1', 'สถานะ');
+			$sheet->setCellValue('H1', 'หมายเหตุ');
 
 			$data = $this->document_model->AC($fromDate, $toDate);
 
-			if(!empty($data))
+			if (!empty($data))
 			{
 				$no = 1;
 				$row = 2;
 
-				foreach($data as $rs)
+				foreach ($data as $rs)
 				{
-					$this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-	        $this->excel->getActiveSheet()->setCellValue('B'.$row, thai_date($rs->date_add, FALSE, '/'));
-					$this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
-					$this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->reference);
-	        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->issue_code);
-					$this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->receive_code);
-	        $this->excel->getActiveSheet()->setCellValue('G'.$row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
-          if(!empty($rs->reason))
+					$sheet->setCellValue('A' . $row, $no);
+					$sheet->setCellValue('B' . $row, thai_date($rs->date_add, FALSE, '/'));
+					$sheet->setCellValue('C' . $row, $rs->code);
+					$sheet->setCellValue('D' . $row, $rs->reference);
+					$sheet->setCellValue('E' . $row, $rs->issue_code);
+					$sheet->setCellValue('F' . $row, $rs->receive_code);
+					$sheet->setCellValue('G' . $row, ($rs->status == 0 ? 'Pending' : ($rs->status == 1 ? 'Success' : ($rs->status == 2 ? 'Canceled' : 'Unknow'))));
+					if (!empty($rs->reason))
 					{
-						$this->excel->getActiveSheet()->setCellValue('H'.$row, $rs->reason);
+						$sheet->setCellValue('H' . $row, $rs->reason);
 					}
 					$no++;
 					$row++;
@@ -1067,59 +989,48 @@ class Document_running extends PS_Controller
 		} //--- end AC
 
 
-    setToken($token);
-    $file_name = "รายงานทะเบียนคุมเอกสารแยกตามประเภท ".date('Ymd').".xlsx";
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
-    header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
-    $writer->save('php://output');
-
-  }
-
-
-  public function statusLabel($status, $is_expire = 0)
-  {
-    $label = "Unknow";
-
-    if($is_expire == 1)
-    {
-      $label = "Expired";
-    }
-    else
-    {
-      switch($status)
-      {
-        case -1 :
-          $label = "Draft";
-          break;
-        case 0 :
-          $label = "Pending";
-          break;
-        case 1 :
-          $label = "Success";
-          break;
-        case 2 :
-          $label = "Canceled";
-          break;
-        case 3 :
-          $label = "WMS";
-          break;
-        case 4 :
-          $label = "Acception";
-          break;
-      }
-    }
-
-    return $label;
-  }
-
-} //--- end class
+		setToken($token);
+		$file_name = "รายงานทะเบียนคุมเอกสารแยกตามประเภท " . date('Ymd') . ".xlsx";
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
+		header('Content-Disposition: attachment;filename="' . $file_name . '"');
+		$writer = new Xlsx($excel);
+		$writer->save('php://output');
+	}
 
 
+	public function statusLabel($status, $is_expire = 0)
+	{
+		$label = "Unknow";
 
+		if ($is_expire == 1)
+		{
+			$label = "Expired";
+		}
+		else
+		{
+			switch ($status)
+			{
+				case -1:
+					$label = "Draft";
+					break;
+				case 0:
+					$label = "Pending";
+					break;
+				case 1:
+					$label = "Success";
+					break;
+				case 2:
+					$label = "Canceled";
+					break;
+				case 3:
+					$label = "WMS";
+					break;
+				case 4:
+					$label = "Acception";
+					break;
+			}
+		}
 
-
-
-
-
- ?>
+		return $label;
+	}
+}

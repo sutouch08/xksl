@@ -7,9 +7,7 @@ class Delivery_order extends PS_Controller
   public $menu_code = 'ICODDO';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'PICKPACK';
-	public $title = 'รายการรอเปิดบิล';
-  public $filter;
-  public $error;
+	public $title = 'รายการรอเปิดบิล';  
   public $logs;
 
   public function __construct()
@@ -107,19 +105,7 @@ class Delivery_order extends PS_Controller
       {
         $sc = FALSE;
         $this->error = "ออเดอร์ถูกยกเลิกบน Platform แล้ว";
-      }
-
-      // if($sc === TRUE)
-      // {
-      //   if( ! empty($order->reference) && ($order->channels_code == '0009'))
-      //   {
-      //     if($this->is_cancel($order->reference, $order->channels_code))
-      //     {
-      //       $sc = FALSE;
-      //       $this->error = "ออเดอร์ถูกยกเลิกบน Platform แล้ว";
-      //     }
-      //   }
-      // }
+      }     
     }
     else
     {
@@ -551,7 +537,7 @@ class Delivery_order extends PS_Controller
     if(! $this->export->export_order($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = trim($this->export->error ?? '');
     }
 
     return $sc;
@@ -565,7 +551,7 @@ class Delivery_order extends PS_Controller
     if(! $this->export->export_transfer_order($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = trim($this->export->error ?? '');
     }
 
     return $sc;
@@ -579,7 +565,7 @@ class Delivery_order extends PS_Controller
     if(! $this->export->export_transfer_draft($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = trim($this->export->error ?? '');
     }
 
     return $sc;
@@ -593,7 +579,7 @@ class Delivery_order extends PS_Controller
     if(! $this->export->export_transform($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = trim($this->export->error ?? '');
     }
 
     return $sc;

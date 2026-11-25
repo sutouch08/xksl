@@ -23,32 +23,25 @@ class Cancel_reason extends PS_Controller
       'active' => get_filter('active', 'cancel_active', 'all')
     );
 
-
     if($this->input->post('search'))
     {
       redirect($this->home);
     }
     else
     {
-      //--- แสดงผลกี่รายการต่อหน้า
   		$perpage = get_rows();
-
   		$rows = $this->cancel_reason_model->count_rows($filter);
-  		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
   		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
   		$filter['data'] = $this->cancel_reason_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
-
   		$this->pagination->initialize($init);
       $this->load->view('masters/cancel_reason/cancel_reason_list', $filter);
     }
   }
 
-
   public function add_new()
   {
     $this->load->view('masters/cancel_reason/cancel_reason_add');
   }
-
 
   public function add()
   {
@@ -56,7 +49,7 @@ class Cancel_reason extends PS_Controller
 
     if($this->pm->can_add)
     {
-      $name = trim($this->input->post('name'));
+      $name = trim($this->input->post('name') ?? '');
       $active = $this->input->post('active');
 
       if( ! empty($name))
@@ -97,7 +90,6 @@ class Cancel_reason extends PS_Controller
   }
 
 
-
   public function edit($id)
   {
     if($this->pm->can_edit)
@@ -120,7 +112,6 @@ class Cancel_reason extends PS_Controller
   }
 
 
-
   public function update()
   {
     $sc = TRUE;
@@ -128,7 +119,7 @@ class Cancel_reason extends PS_Controller
     if($this->pm->can_edit)
     {
       $id = $this->input->post('id');
-      $name = trim($this->input->post('name'));
+      $name = trim($this->input->post('name') ?? '');
       $active = $this->input->post('active');
 
       if( ! empty($name))
@@ -256,6 +247,4 @@ class Cancel_reason extends PS_Controller
 	{
 		return clear_filter(array('cancel_name', 'cancel_active'));    
 	}
-
-}//--- end class
- ?>
+}

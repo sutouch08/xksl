@@ -1,13 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Consign_stock_zone extends PS_Controller
 {
   public $menu_code = 'RCSSTZ';
 	public $menu_group_code = 'RE';
   public $menu_sub_group_code = 'REINVT';
 	public $title = 'รายงานสินค้าคงเหลือฝากขาย(แท้) แยกตามโซน';
-  public $filter;
-  public $error;
+ 
   public function __construct()
   {
     parent::__construct();
@@ -23,7 +25,6 @@ class Consign_stock_zone extends PS_Controller
     $ds['whList'] = $whList;
     $this->load->view('report/inventory/report_consign_stock_zone', $ds);
   }
-
 
   public function get_report()
   {
@@ -108,9 +109,6 @@ class Consign_stock_zone extends PS_Controller
   }
 
 
-
-
-
   public function do_export()
   {
     ini_set('memory_limit','512M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
@@ -146,39 +144,34 @@ class Consign_stock_zone extends PS_Controller
     $report_title = "รายงานสินค้าคงเหลือ(ฝากขาย) ณ วันที่ ".date('d/m/Y');
     $whList = $allWhouse == 1 ? 'ทั้งหมด' : $wh_list;
     $zoneList = $allZone == 1 ? 'ทั้งหมด' : $zoneCode." - ".$zoneName;
-    $productList  = $allProduct == 1 ? 'ทั้งหมด' : '('.$pdFrom.') - ('.$pdTo.')';
-
-    $bs = array();
+    $productList  = $allProduct == 1 ? 'ทั้งหมด' : '('.$pdFrom.') - ('.$pdTo.')';    
 
     $result = $this->consign_stock_report_model->get_consign_stock_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode);
-
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Stock Balance Report');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();
+    $sheet->setTitle('Stock Balance Report');
 
     //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', $report_title);
-    $this->excel->getActiveSheet()->mergeCells('A1:G1');
-    $this->excel->getActiveSheet()->setCellValue('A2', 'คลัง');
-    $this->excel->getActiveSheet()->setCellValue('B2', $whList);
-    $this->excel->getActiveSheet()->mergeCells('B2:G2');
-    $this->excel->getActiveSheet()->setCellValue('A3', 'โซน');
-    $this->excel->getActiveSheet()->setCellValue('B3', $zoneList);
-    $this->excel->getActiveSheet()->mergeCells('B3:G3');
-    $this->excel->getActiveSheet()->setCellValue('A4', 'สินค้า');
-    $this->excel->getActiveSheet()->setCellValue('B4', $productList);
-    $this->excel->getActiveSheet()->mergeCells('B4:G4');
+    $sheet->setCellValue('A1', $report_title);
+    $sheet->mergeCells('A1:G1');
+    $sheet->setCellValue('A2', 'คลัง');
+    $sheet->setCellValue('B2', $whList);
+    $sheet->mergeCells('B2:G2');
+    $sheet->setCellValue('A3', 'โซน');
+    $sheet->setCellValue('B3', $zoneList);
+    $sheet->mergeCells('B3:G3');
+    $sheet->setCellValue('A4', 'สินค้า');
+    $sheet->setCellValue('B4', $productList);
+    $sheet->mergeCells('B4:G4');
 
     //--- set Table header
-    $this->excel->getActiveSheet()->setCellValue('A5', 'ลำดับ');
-    $this->excel->getActiveSheet()->setCellValue('B5', 'รหัสคลัง');
-    $this->excel->getActiveSheet()->setCellValue('C5', 'รหัสโซน');
-    $this->excel->getActiveSheet()->setCellValue('D5', 'ชื่อโซน');
-    $this->excel->getActiveSheet()->setCellValue('E5', 'รหัสสินค้า');
-    $this->excel->getActiveSheet()->setCellValue('F5', 'ชื่อสินค้า');
-    $this->excel->getActiveSheet()->setCellValue('G5', 'จำนวน');
+    $sheet->setCellValue('A5', 'ลำดับ');
+    $sheet->setCellValue('B5', 'รหัสคลัง');
+    $sheet->setCellValue('C5', 'รหัสโซน');
+    $sheet->setCellValue('D5', 'ชื่อโซน');
+    $sheet->setCellValue('E5', 'รหัสสินค้า');
+    $sheet->setCellValue('F5', 'ชื่อสินค้า');
+    $sheet->setCellValue('G5', 'จำนวน');
 
     $row = 6;
     if(!empty($result))
@@ -187,31 +180,30 @@ class Consign_stock_zone extends PS_Controller
       $totalQty = 0;
       foreach($result as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->warehouse_code);
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->zone_code);
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->zone_name);
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->product_name);
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->qty);
+        $sheet->setCellValue('A'.$row, $no);
+        $sheet->setCellValue('B'.$row, $rs->warehouse_code);
+        $sheet->setCellValue('C'.$row, $rs->zone_code);
+        $sheet->setCellValue('D'.$row, $rs->zone_name);
+        $sheet->setCellValue('E'.$row, $rs->product_code);
+        $sheet->setCellValue('F'.$row, $rs->product_name);
+        $sheet->setCellValue('G'.$row, $rs->qty);
         $totalQty += $rs->qty;
         $no++;
         $row++;
       }
 
-      $this->excel->getActiveSheet()->setCellValue('A'.$row, 'รวม');
-      $this->excel->getActiveSheet()->mergeCells('A'.$row.':F'.$row);
-      $this->excel->getActiveSheet()->setCellValue('G'.$row, $totalQty);
-      $this->excel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
+      $sheet->setCellValue('A'.$row, 'รวม');
+      $sheet->mergeCells('A'.$row.':F'.$row);
+      $sheet->setCellValue('G'.$row, $totalQty);
+      $sheet->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
     }
 
     setToken($token);
     $file_name = "Report Consign Stock Zone.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
-
   }
 
 
@@ -234,47 +226,35 @@ class Consign_stock_zone extends PS_Controller
 
     $result = $this->consign_stock_report_model->get_consign_stock_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode);
 
-    //--- load excel library
-    $this->load->library('excel');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();
 
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Report Stock Zone');
+    $sheet->setTitle('Report Stock Zone');
 
     //--- set Table header
-    $this->excel->getActiveSheet()->setCellValue('A1', 'barcode');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'item_code');
-    $this->excel->getActiveSheet()->setCellValue('C1', 'qty');
+    $sheet->setCellValue('A1', 'barcode');
+    $sheet->setCellValue('B1', 'item_code');
+    $sheet->setCellValue('C1', 'qty');
 
     $row = 2;
     if(!empty($result))
     {
       foreach($result as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValueExplicit('A'.$row, $this->products_model->get_barcode($rs->product_code), PHPExcel_Cell_DataType::TYPE_STRING);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->qty);
+        $sheet->setCellValueExplicit('A'.$row, $this->products_model->get_barcode($rs->product_code), DataType::TYPE_STRING);
+        $sheet->setCellValue('B'.$row, $rs->product_code);
+        $sheet->setCellValue('C'.$row, $rs->qty);
         $row++;
       }
 
-      $this->excel->getActiveSheet()->getStyle('C2:C'.($row -1))->getNumberFormat()->setFormatCode('0');
+      $sheet->getStyle('C2:C'.($row -1))->getNumberFormat()->setFormatCode('0');
     }
 
     setToken($token);
     $file_name = "Report Consign Stock Zone.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
   }
-
-
-} //--- end class
-
-
-
-
-
-
-
-
- ?>
+}

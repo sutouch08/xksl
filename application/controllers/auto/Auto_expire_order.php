@@ -32,7 +32,7 @@ class Auto_expire_order extends CI_Controller
     }
     else
     {
-      $role = array('S'); //--- 'S' is default
+      $role = array('S');
     }
 
 		$end_date = date('Y-m-d H:i:s', strtotime("-{$limit} days"));
@@ -46,9 +46,5 @@ class Auto_expire_order extends CI_Controller
         $this->orders_model->set_expire_order_details($rs->code);
 			}
 		}
-
 	}
-
-
-} //--- end class
- ?>
+}

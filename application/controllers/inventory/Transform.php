@@ -6,8 +6,7 @@ class Transform extends PS_Controller
   public $menu_code = 'ICTRFM';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'REQUEST';
-	public $title = 'เบิกแปรสภาพ(ขาย)';
-  public $filter;
+	public $title = 'เบิกแปรสภาพ(ขาย)';  
   public $role = 'T';
   public $isClosed = FALSE;
   public $require_remark = 1;
@@ -88,13 +87,7 @@ class Transform extends PS_Controller
     $filter['state_list'] = empty($state_list) ? NULL : $state_list;
 
 		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
+		$perpage = get_rows();		
     $role     = 'T'; //--- U = เบิกอภินันท์;
 		$segment  = 4; //-- url segment
 		$rows     = $this->orders_model->count_rows($filter, $role);
@@ -132,7 +125,7 @@ class Transform extends PS_Controller
   public function add()
   {
     $sc = TRUE;
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
@@ -160,7 +153,7 @@ class Transform extends PS_Controller
           'bookcode' => $book_code,
           'customer_code' => $data->customer_code,
           'customer_name' => $data->customer_name,
-          'reference' => get_null(trim($data->reference)),
+          'reference' => get_null(trim($data->reference ?? '')),
           'user' => $this->_user->uname,
           'remark' => get_null($data->remark),
           'user_ref' => $data->empName,
@@ -440,9 +433,9 @@ class Transform extends PS_Controller
 
       $order_code = $this->input->post('order_code');
       $id_order_detail  = $this->input->post('id_order_detail');
-      $original_product = trim($this->input->post('original_product'));
-      $transform_product = trim($this->input->post('transform_product'));
-      $qty = intval($this->input->post('qty'));
+      $original_product = trim($this->input->post('original_product') ?? '');
+      $transform_product = trim($this->input->post('transform_product') ?? '');
+      $qty = intval($this->input->post('qty') ?? 0);
 
       $order = $this->orders_model->get($order_code);
       $sold = $this->invoice_model->get_item_sold_qty($order_code, $original_product);
@@ -452,8 +445,8 @@ class Transform extends PS_Controller
       $arr = array(
         'order_code' => $order_code,
         'id_order_detail' => $id_order_detail,
-        'original_code' => $original_product,
-        'product_code' => $transform_product,
+        'original_code' => trim($original_product ?? ''),
+        'product_code' => trim($transform_product ?? ''),
         'order_qty' => $qty,
         'sold_qty' => $sold_qty,
         'valid' => $valid

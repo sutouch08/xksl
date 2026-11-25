@@ -1,19 +1,21 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Items extends PS_Controller
 {
   public $menu_code = 'DBITEM';
 	public $menu_group_code = 'DB';
   public $menu_sub_group_code = 'PRODUCT';
 	public $title = 'เพิ่ม/แก้ไข รายการสินค้า';
-  public $error = '';
-
+  
   public function __construct()
   {
     parent::__construct();
     $this->home = base_url().'masters/items';
 
-    //--- load model
     $this->load->model('masters/products_model');
     $this->load->model('masters/product_group_model');
 		$this->load->model('masters/product_main_group_model');
@@ -29,7 +31,6 @@ class Items extends PS_Controller
     $this->load->model('masters/product_tab_model');
     $this->load->model('masters/product_image_model');
 
-    //---- load helper
     $this->load->helper('product_tab');
     $this->load->helper('product_brand');
     $this->load->helper('product_tab');
@@ -42,7 +43,6 @@ class Items extends PS_Controller
     $this->load->helper('product_sub_group');
     $this->load->helper('product_images');
     $this->load->helper('unit');
-
   }
 
 
@@ -56,7 +56,7 @@ class Items extends PS_Controller
       'size' => get_filter('size', 'size', ''),
       'group' => get_filter('group', 'group', 'all'),
       'sub_group' => get_filter('sub_group', 'sub_group', 'all'),
-      'category'  => get_filter('category', 'category', 'all'),
+      'category' => get_filter('category', 'category', 'all'),
       'kind' => get_filter('kind', 'kind', 'all'),
       'type' => get_filter('type', 'type', 'all'),
       'brand' => get_filter('brand', 'brand', 'all'),
@@ -65,31 +65,23 @@ class Items extends PS_Controller
       'active' => get_filter('active', 'active', 'all')
     );
 
-		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
+		$segment = 4;
+		$rows = $this->products_model->count_rows($filter);
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$products = $this->products_model->get_list($filter, $perpage, $this->uri->segment($segment));    
 
-		$segment  = 4; //-- url segment
-		$rows     = $this->products_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$products = $this->products_model->get_list($filter, $perpage, $this->uri->segment($segment));
-    $ds       = array();
     if(!empty($products))
     {
       foreach($products as $rs)
       {
-        $rs->group   = $this->product_group_model->get_name($rs->group_code);
+        $rs->group = $this->product_group_model->get_name($rs->group_code);
         $rs->main_group = $this->product_main_group_model->get_name($rs->main_group_code);
         $rs->sub_group = $this->product_sub_group_model->get_name($rs->sub_group_code);
-        $rs->kind    = $this->product_kind_model->get_name($rs->kind_code);
-        $rs->type    = $this->product_type_model->get_name($rs->type_code);
-        $rs->category  = $this->product_category_model->get_name($rs->category_code);
-        $rs->brand   = $this->product_brand_model->get_name($rs->brand_code);
+        $rs->kind = $this->product_kind_model->get_name($rs->kind_code);
+        $rs->type = $this->product_type_model->get_name($rs->type_code);
+        $rs->category = $this->product_category_model->get_name($rs->category_code);
+        $rs->brand = $this->product_brand_model->get_name($rs->brand_code);
         $rs->collection = $this->product_collection_model->get_name($rs->collection_code);
       }
     }
@@ -99,7 +91,6 @@ class Items extends PS_Controller
 		$this->pagination->initialize($init);
     $this->load->view('masters/product_items/items_list', $filter);
   }
-
 
   public function view_detail($id)
   {
@@ -113,8 +104,7 @@ class Items extends PS_Controller
     {
       $this->page_error();
     }
-  }
-  
+  }  
 
   public function import_items()
   {
@@ -138,18 +128,16 @@ class Items extends PS_Controller
 				$this->error = $this->upload->display_errors();
 			}
       else
-      {
-        $this->load->library('excel');
+      {        
         $this->load->library('api');
-
         $info = $this->upload->data();
         /// read file
-				$excel = PHPExcel_IOFactory::load($info['full_path']);
+				$excel = IOFactory::load($info['full_path']);
 				//get only the Cell Collection
-        $collection	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+        $collection	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
         $i = 1;
-        $count = count($collection);
+        $count = count($collection ?? []);
         $limit = intval(getConfig('IMPORT_ROWS_LIMIT'))+1;
 
         if($count <= $limit)
@@ -210,23 +198,23 @@ class Items extends PS_Controller
               }
 
               $code_pattern = '/[^a-zA-Z0-9_-]/';
-              $rs['D'] = str_replace(array("\n", "\r"), '', $rs['D']); //--- เอาตัวขึ้นบรรทัดใหม่ออก
+              $rs['D'] = str_replace(array("\n", "\r"), '', $rs['D'] ?? ''); //--- เอาตัวขึ้นบรรทัดใหม่ออก
 
-              $style = preg_replace($code_pattern, '', get_null(trim($rs['D'])));
-              $old_style = get_null(trim($rs['U']));
-              $color_code = get_null(trim($rs['E']));
-              $size_code = get_null(trim($rs['F']));
-              $group_code = get_null(trim($rs['G']));
-							$main_group_code = get_null(trim($rs['H']));
-              $sub_group_code = get_null(trim($rs['I']));
-              $category_code = get_null(trim($rs['J']));
-              $kind_code = get_null(trim($rs['K']));
-              $type_code = get_null(trim($rs['L']));
-              $brand_code = get_null(trim($rs['M']));
-              $collection_code = get_null(trim($rs['N']));
+              $style = preg_replace($code_pattern, '', get_null(trim($rs['D'] ?? '')));
+              $old_style = get_null(trim($rs['U'] ?? ''));
+              $color_code = get_null(trim($rs['E'] ?? ''));
+              $size_code = get_null(trim($rs['F'] ?? ''));
+              $group_code = get_null(trim($rs['G'] ?? ''));
+							$main_group_code = get_null(trim($rs['H'] ?? ''));
+              $sub_group_code = get_null(trim($rs['I'] ?? ''));
+              $category_code = get_null(trim($rs['J'] ?? ''));
+              $kind_code = get_null(trim($rs['K'] ?? ''));
+              $type_code = get_null(trim($rs['L'] ?? ''));
+              $brand_code = get_null(trim($rs['M'] ?? ''));
+              $collection_code = get_null(trim($rs['N'] ?? ''));
               $year = empty($rs['O']) ? '0000' : trim($rs['O']);
               $is_api = empty($rs['T']) ? 0 : ((trim($rs['T']) == 'Y' OR trim($rs['T'] == 1)) ? 1 : 0);
-              $api_rate = empty($rs['W']) ? 0 : (floatval(trim($rs['W'])));
+              $api_rate = empty($rs['W']) ? 0 : (floatval(trim($rs['W'] ?? '')));
               $api_rate = $api_rate < 0 ? 0 : ($api_rate > 100 ? 100 : $api_rate);
 
               if(!empty($color_code) && ! $this->product_color_model->is_exists($color_code))
@@ -301,10 +289,10 @@ class Items extends PS_Controller
                     'brand_code' => $brand_code,
                     'collection_code' => $collection_code,
                     'year' => $year,
-                    'cost' => round(trim($rs['P']), 2),
-                    'price' => round(trim($rs['Q']), 2),
-                    'unit_code' => trim($rs['R']),
-                    'count_stock' => trim($rs['S']) === 'N' ? 0:1,
+                    'cost' => round(trim($rs['P'] ?? ''), 2),
+                    'price' => round(trim($rs['Q'] ?? ''), 2),
+                    'unit_code' => trim($rs['R'] ?? ''),
+                    'count_stock' => trim($rs['S'] ?? '') === 'N' ? 0:1,
                     'is_api' => $is_api,                  
                     'update_user' => $this->_user->uname,
                     'old_code' => $old_style
@@ -318,29 +306,29 @@ class Items extends PS_Controller
                 }
               }
 
-              $rs['A'] = str_replace(array("\n", "\r"), '', $rs['A']); //--- เอาตัวขึ้นบรรทัดใหม่ออก
-              $code = preg_replace($code_pattern, '', trim($rs['A']));
-              $old_code = get_null(trim($rs['V']));
+              $rs['A'] = str_replace(array("\n", "\r"), '', $rs['A'] ?? ''); //--- เอาตัวขึ้นบรรทัดใหม่ออก
+              $code = preg_replace($code_pattern, '', trim($rs['A'] ?? ''));
+              $old_code = get_null(trim($rs['V'] ?? ''));
               $arr = array(
                 'code' => $code,
-                'name' => trim($rs['B']),
-                'barcode' => get_null(trim($rs['C'])),
-                'style_code' => get_null(trim($rs['D'])),
-                'color_code' => get_null(trim($rs['E'])),
-                'size_code' => get_null(trim($rs['F'])),
-                'group_code' => get_null(trim($rs['G'])),
-								'main_group_code' => get_null(trim($rs['H'])),
-                'sub_group_code' => get_null(trim($rs['I'])),
-                'category_code' => get_null(trim($rs['J'])),
-                'kind_code' => get_null(trim($rs['K'])),
-                'type_code' => get_null(trim($rs['L'])),
-                'brand_code' => get_null(trim($rs['M'])),
-                'collection_code' => get_null(trim($rs['N'])),
-                'year' => trim($rs['O']),
-                'cost' => round(trim($rs['P']), 2),
-                'price' => round(trim($rs['Q']), 2),
-                'unit_code' => empty(trim($rs['R'])) ? 'PCS' : trim($rs['R']),
-                'count_stock' => trim($rs['S']) === 'N' ? 0:1,
+                'name' => trim($rs['B'] ?? ''),
+                'barcode' => get_null(trim($rs['C'] ?? '')),
+                'style_code' => get_null(trim($rs['D'] ?? '')),
+                'color_code' => get_null(trim($rs['E'] ?? '')),
+                'size_code' => get_null(trim($rs['F'] ?? '')),
+                'group_code' => get_null(trim($rs['G'] ?? '')),
+								'main_group_code' => get_null(trim($rs['H'] ?? '')),
+                'sub_group_code' => get_null(trim($rs['I'] ?? '')),
+                'category_code' => get_null(trim($rs['J'] ?? '')),
+                'kind_code' => get_null(trim($rs['K'] ?? '')),
+                'type_code' => get_null(trim($rs['L'] ?? '')),
+                'brand_code' => get_null(trim($rs['M'] ?? '')),
+                'collection_code' => get_null(trim($rs['N'] ?? '')),
+                'year' => trim($rs['O'] ?? ''),
+                'cost' => round(trim($rs['P'] ?? ''), 2),
+                'price' => round(trim($rs['Q'] ?? ''), 2),
+                'unit_code' => empty(trim($rs['R'] ?? '')) ? 'PCS' : trim($rs['R'] ?? ''),
+                'count_stock' => trim($rs['S'] ?? '') === 'N' ? 0:1,
                 'is_api' => $is_api,
                 'api_rate' => $api_rate,
                 'update_user' => $this->_user->uname,
@@ -348,9 +336,9 @@ class Items extends PS_Controller
                 'old_code' => $old_code
               );
 
-              if(isset($rs['X']) && $rs['X'] != '' && ($rs['X'] == 'N' OR $rs['X'] == 'n' OR $rs['X'] == 'Y' OR $rs['X'] == 'y'))
+              if(isset($rs['X']) && ($rs['X'] ?? '') != '' && (($rs['X'] ?? '') == 'N' OR ($rs['X'] ?? '') == 'n' OR ($rs['X'] ?? '') == 'Y' OR ($rs['X'] ?? '') == 'y'))
               {
-                $arr['active'] = $rs['X'] == 'N' ? 0 : 1;
+                $arr['active'] = ($rs['X'] ?? '') == 'N' ? 0 : 1;
               }
 
               if($this->products_model->is_exists($code))
@@ -392,11 +380,11 @@ class Items extends PS_Controller
   public function add()
   {
     $sc = TRUE;
-    $ds = json_decode($this->input->post('data'));
+    $ds = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($ds))
     {
-      $code = trim($ds->code);
+      $code = trim($ds->code ?? '');
 
       if($this->products_model->is_exists($code))
       {
@@ -410,9 +398,9 @@ class Items extends PS_Controller
 
         $arr = array(
           'code' => $code,
-          'name' => trim($ds->name),
-          'barcode' => get_null(trim($ds->barcode)),
-          'style_code' => trim($ds->style),
+          'name' => trim($ds->name ?? ''),
+          'barcode' => get_null(trim($ds->barcode ?? '')),
+          'style_code' => trim($ds->style ?? ''),
           'color_code' => get_null($ds->color_code),
           'size_code' => get_null($ds->size_code),
           'group_code' => get_null($ds->group_code),
@@ -424,8 +412,8 @@ class Items extends PS_Controller
           'brand_code' => get_null($ds->brand_code),
           'collection_code' => get_null($ds->collection_code),
           'year' => $ds->year,
-          'cost' => round($ds->cost, 2),
-          'price' => round($ds->price, 2),
+          'cost' => round(floatval($ds->cost), 2),
+          'price' => round(floatval($ds->price), 2),
           'unit_code' => $ds->unit_code,
           'count_stock' => $ds->count_stock == 0 ? 0 : 1,
           'can_sell' => $ds->can_sell == 0 ? 0 : 1,
@@ -492,16 +480,16 @@ class Items extends PS_Controller
 	public function update()
   {
 		$sc = TRUE;
-		$ds = json_decode($this->input->post('data'));
+		$ds = json_decode($this->input->post('data') ?? '{}');
 
 		if(! empty($ds))
 		{
 			$code = $ds->code;
 
       $arr = array(
-        'name' => trim($ds->name),
-        'barcode' => get_null(trim($ds->barcode)),
-        'style_code' => trim($ds->style),
+        'name' => trim($ds->name ?? ''),
+        'barcode' => get_null(trim($ds->barcode ?? '')),
+        'style_code' => trim($ds->style ?? ''),
         'color_code' => get_null($ds->color_code),
         'size_code' => get_null($ds->size_code),
         'group_code' => get_null($ds->group_code),
@@ -513,8 +501,8 @@ class Items extends PS_Controller
         'brand_code' => get_null($ds->brand_code),
         'collection_code' => get_null($ds->collection_code),
         'year' => $ds->year,
-        'cost' => round($ds->cost, 2),
-        'price' => round($ds->price, 2),
+        'cost' => round(floatval($ds->cost), 2),
+        'price' => round(floatval($ds->price), 2),
         'unit_code' => $ds->unit_code,
         'count_stock' => empty($ds->count_stock) ? 0 : 1,
         'can_sell' => empty($ds->can_sell) ? 0 : 1,
@@ -540,7 +528,7 @@ class Items extends PS_Controller
             foreach($ds->alt_codes as $alt_code)
             {
               $arr = array(
-                'alt_code' => trim($alt_code),
+                'alt_code' => trim($alt_code ?? ''),
                 'product_code' => $code
               );
 
@@ -577,8 +565,6 @@ class Items extends PS_Controller
     }
   }
 
-
-
   public function toggle_can_sell($code)
   {
     $status = $this->products_model->get_status('can_sell', $code);
@@ -593,7 +579,6 @@ class Items extends PS_Controller
       echo 'fail';
     }
   }
-
 
   public function toggle_active($code)
   {
@@ -751,45 +736,40 @@ class Items extends PS_Controller
 
     public function download_template($token)
     {
-      //--- load excel library
-      $this->load->library('excel');
-
-      $this->excel->setActiveSheetIndex(0);
-      $this->excel->getActiveSheet()->setTitle('Items Master Template');
-
-      //--- set report title header
-      $this->excel->getActiveSheet()->setCellValue('A1', 'Code');
-      $this->excel->getActiveSheet()->setCellValue('B1', 'Name');
-      $this->excel->getActiveSheet()->setCellValue('C1', 'Barcode');
-      $this->excel->getActiveSheet()->setCellValue('D1', 'Model');
-      $this->excel->getActiveSheet()->setCellValue('E1', 'Color');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'Size');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'Group');
-      $this->excel->getActiveSheet()->setCellValue('H1', 'MainGroup');
-      $this->excel->getActiveSheet()->setCellValue('I1', 'SubGroup');
-      $this->excel->getActiveSheet()->setCellValue('J1', 'Category');
-      $this->excel->getActiveSheet()->setCellValue('K1', 'Kind');
-      $this->excel->getActiveSheet()->setCellValue('L1', 'Type');
-      $this->excel->getActiveSheet()->setCellValue('M1', 'Brand');
-      $this->excel->getActiveSheet()->setCellValue('N1', 'Collection');
-      $this->excel->getActiveSheet()->setCellValue('O1', 'Year');
-      $this->excel->getActiveSheet()->setCellValue('P1', 'Cost');
-      $this->excel->getActiveSheet()->setCellValue('Q1', 'Price');
-      $this->excel->getActiveSheet()->setCellValue('R1', 'Unit');
-      $this->excel->getActiveSheet()->setCellValue('S1', 'CountStock');
-      $this->excel->getActiveSheet()->setCellValue('T1', 'IsAPI');
-      $this->excel->getActiveSheet()->setCellValue('U1', 'OldModel');
-      $this->excel->getActiveSheet()->setCellValue('V1', 'OldCode');
-      $this->excel->getActiveSheet()->setCellValue('W1', 'ApiRate');
-      $this->excel->getActiveSheet()->setCellValue('X1', 'Active');
-
+      $excel = new Spreadsheet();
+      $sheet = $excel->getActiveSheet();
+      $sheet->setTitle('Items Master Template');
+      
+      $sheet->setCellValue('A1', 'Code');
+      $sheet->setCellValue('B1', 'Name');
+      $sheet->setCellValue('C1', 'Barcode');
+      $sheet->setCellValue('D1', 'Model');
+      $sheet->setCellValue('E1', 'Color');
+      $sheet->setCellValue('F1', 'Size');
+      $sheet->setCellValue('G1', 'Group');
+      $sheet->setCellValue('H1', 'MainGroup');
+      $sheet->setCellValue('I1', 'SubGroup');
+      $sheet->setCellValue('J1', 'Category');
+      $sheet->setCellValue('K1', 'Kind');
+      $sheet->setCellValue('L1', 'Type');
+      $sheet->setCellValue('M1', 'Brand');
+      $sheet->setCellValue('N1', 'Collection');
+      $sheet->setCellValue('O1', 'Year');
+      $sheet->setCellValue('P1', 'Cost');
+      $sheet->setCellValue('Q1', 'Price');
+      $sheet->setCellValue('R1', 'Unit');
+      $sheet->setCellValue('S1', 'CountStock');
+      $sheet->setCellValue('T1', 'IsAPI');
+      $sheet->setCellValue('U1', 'OldModel');
+      $sheet->setCellValue('V1', 'OldCode');
+      $sheet->setCellValue('W1', 'ApiRate');
+      $sheet->setCellValue('X1', 'Active');
 
       setToken($token);
-
       $file_name = "Items_master_template.xlsx";
       header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
       header('Content-Disposition: attachment;filename="'.$file_name.'"');
-      $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+      $writer = new Xlsx($excel);
       $writer->save('php://output');
     }
 
@@ -799,5 +779,3 @@ class Items extends PS_Controller
     clear_filter($filter);
 	}
 }
-
-?>

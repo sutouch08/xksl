@@ -7,8 +7,7 @@ class Pos_api_logs extends PS_Controller
 	public $menu_code = 'POSAPILOG';
 	public $menu_group_code = 'POSLOG';
   public $menu_sub_group_code = '';
-  public $filter;
-
+  
   public function __construct()
   {
     parent::__construct();
@@ -75,5 +74,4 @@ class Pos_api_logs extends PS_Controller
 		echo "done";
 	}
 
-} //--- end classs
-?>
+}

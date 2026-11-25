@@ -2,9 +2,10 @@
 function select_channels($code = '')
 {
   $sc = '';
-  $CI =& get_instance();
-  $CI->load->model('masters/channels_model');
-  $channels = $CI->channels_model->get_data();
+  $ci =& get_instance();
+  $ci->load->model('masters/channels_model');
+  $channels = $ci->channels_model->get_data();
+
   if(!empty($channels))
   {
     foreach($channels as $rs)
@@ -17,7 +18,7 @@ function select_channels($code = '')
 }
 
 
-function select_channels_type($code = NULL)
+function select_channels_type($code = '')
 {
 	$sc  = '<option value="WO" '.is_selected('WO', $code).'>WO</option>';
 	$sc .= '<option value="WO-B2C" '.is_selected('WO-B2C', $code).'>WO-B2C</option>';
@@ -33,7 +34,7 @@ function get_channels_array()
   return $ci->channels_model->get_channels_array();
 }
 
-function select_dispatch_channels($code = NULL)
+function select_dispatch_channels($code = '')
 {
   $sc = '';
   $ci =& get_instance();
@@ -53,4 +54,3 @@ function select_dispatch_channels($code = NULL)
 
   return $sc;
 }
- ?>

@@ -6,9 +6,7 @@ class Orders extends PS_Controller
   public $menu_code = 'SOODSO';
 	public $menu_group_code = 'SO';
   public $menu_sub_group_code = 'ORDER';
-	public $title = 'ออเดอร์';
-  public $filter;
-  public $error;
+	public $title = 'ออเดอร์';  
 	public $logs; //--- logs database;
   public $sync_chatbot_stock = FALSE;
   public $log_delete = TRUE;
@@ -39,8 +37,6 @@ class Orders extends PS_Controller
     $this->load->helper('product_images');
     $this->load->helper('discount');
     $this->load->helper('warehouse');
-
-    $this->filter = getConfig('STOCK_FILTER');
   }
 
 
@@ -203,7 +199,7 @@ class Orders extends PS_Controller
   public function add()
   {
     $sc = TRUE;
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
@@ -216,7 +212,7 @@ class Orders extends PS_Controller
       $code = $this->get_new_code($date_add);
 
       $customer = $this->customers_model->get($data->customer_code);
-			$customer_ref = trim($data->customer_ref);
+			$customer_ref = trim($data->customer_ref ?? '');
       $role = 'S'; //--- S = ขาย
       $payment = $this->payment_methods_model->get($data->payment_code);
       $has_term = empty($payment) ? FALSE : ($payment->role == 4 ? FALSE : (is_true($payment->has_term)));
@@ -237,7 +233,7 @@ class Orders extends PS_Controller
       if($sc === TRUE)
       {
 				$ship_to = empty($customer_ref) ? $this->address_model->get_ship_to_address($customer->code) : $this->address_model->get_shipping_address($customer_ref);
-        $id_address = empty($ship_to) ? NULL : (count($ship_to) == 1 ? $ship_to[0]->id : NULL);
+        $id_address = empty($ship_to) ? NULL : (count($ship_to ?? []) == 1 ? $ship_to[0]->id : NULL);
 
         $ds = array(
           'date_add' => $date_add,
@@ -375,9 +371,9 @@ class Orders extends PS_Controller
                     if($i < 3) //--- limit ไว้แค่ 3 เสต็ป
                     {
                       $disc = explode('%', $discText);
-                      $disc[0] = floatval(trim($disc[0])); //--- ตัดช่องว่างออก
-                      $amount = count($disc) == 1 ? $disc[0] : $price * ($disc[0] * 0.01); //--- ส่วนลดต่อชิ้น
-                      $discLabel[$i] = count($disc) == 1 ? $disc[0] : $disc[0].'%';
+                      $disc[0] = floatval(trim($disc[0] ?? '')); //--- ตัดช่องว่างออก
+                      $amount = count($disc ?? []) == 1 ? ($disc[0] ?? 0) : $price * (($disc[0] ?? 0) * 0.01); //--- ส่วนลดต่อชิ้น
+                      $discLabel[$i] = count($disc ?? []) == 1 ? ($disc[0] ?? '') : ($disc[0] ?? 0).'%';
                       $discAmount += $amount;
                       $price -= $amount;
                     }
@@ -1193,7 +1189,7 @@ class Orders extends PS_Controller
     $sc = TRUE;
 
 		$id_sender = $this->input->post('id_sender');
-		$tracking = trim($this->input->post('tracking'));
+		$tracking = trim($this->input->post('tracking') ?? '');
     $cod_amount = $this->input->post('cod_amount');
 
 		$arr = array();
@@ -1817,11 +1813,11 @@ class Orders extends PS_Controller
         $isVisual = $style->count_stock == 1 ? FALSE : TRUE;
     		$attrs = $this->getAttribute($style->code);
 
-    		if( count($attrs) == 1  )
+    		if( count($attrs ?? []) == 1  )
     		{
     			$sc .= $this->orderGridOneAttribute($style, $attrs[0], $isVisual, $view, $warehouse, $zone);
     		}
-    		else if( count( $attrs ) == 2 )
+    		else if( count( $attrs ?? [] ) == 2 )
     		{
     			$sc .= $this->orderGridTwoAttribute($style, $isVisual, $view, $warehouse, $zone);
     		}
@@ -2420,8 +2416,8 @@ class Orders extends PS_Controller
   {
     $this->load->model('address/address_model');
     $sc = TRUE;
-		$customer_code = trim($this->input->post('customer_code'));
-		$cus_ref = trim($this->input->post('customer_ref'));
+		$customer_code = trim($this->input->post('customer_code') ?? '');
+		$cus_ref = trim($this->input->post('customer_ref') ?? '');
     $is_spx = $this->input->post('id_sender') == 148 ? TRUE : FALSE;
 
     if(!empty($customer_code) OR !empty($cus_ref))
@@ -2499,16 +2495,16 @@ class Orders extends PS_Controller
           $arr = array(
             'code' => $cus_ref,
             'customer_code' => $customer_code,
-            'name' => trim($this->input->post('name')),
-            'address' => trim($this->input->post('address')),
+            'name' => trim($this->input->post('name') ?? ''),
+            'address' => trim($this->input->post('address') ?? ''),
             'sub_district' => $sub_district,
             'district' => $district,
             'province' => $province,
             'postcode' => $postcode,
-            'country' => trim($this->input->post('country')),
+            'country' => trim($this->input->post('country') ?? ''),
             'phone' => $phone,
-            'email' => trim($this->input->post('email')),
-            'alias' => trim($this->input->post('alias'))
+            'email' => trim($this->input->post('email') ?? ''),
+            'alias' => trim($this->input->post('alias') ?? '')
           );
 
           if(! $this->address_model->update_shipping_address($id, $arr))
@@ -2524,16 +2520,16 @@ class Orders extends PS_Controller
             'address_code' => '0000',
             'code' => $cus_ref,
             'customer_code' => $customer_code,
-            'name' => trim($this->input->post('name')),
-            'address' => trim($this->input->post('address')),
+            'name' => trim($this->input->post('name') ?? ''),
+            'address' => trim($this->input->post('address') ?? ''),
             'sub_district' => $sub_district,
             'district' => $district,
             'province' => $province,
             'postcode' => $postcode,
-            'country' => trim($this->input->post('country')),
+            'country' => trim($this->input->post('country') ?? ''),
             'phone' => $phone,
-            'email' => trim($this->input->post('email')),
-            'alias' => trim($this->input->post('alias'))
+            'email' => trim($this->input->post('email') ?? ''),
+            'alias' => trim($this->input->post('alias') ?? '')
           );
 
           $rs = $this->address_model->add_shipping_address($arr);
@@ -2565,8 +2561,8 @@ class Orders extends PS_Controller
   {
     $sc = TRUE;
 
-		$customer_code = trim($this->input->post('customer_code'));
-		$customer_ref = trim($this->input->post('customer_ref'));
+		$customer_code = trim($this->input->post('customer_code') ?? '');
+		$customer_ref = trim($this->input->post('customer_ref') ?? '');
 
     if(!empty($customer_code) OR !empty($customer_ref))
     {
@@ -2616,8 +2612,8 @@ class Orders extends PS_Controller
 	public function set_address()
 	{
 		$sc = TRUE;
-		$order_code = $this->input->post('order_code');
-		$id_address = $this->input->post('id_address');
+		$order_code = $this->input->post('order_code') ?? '';
+		$id_address = $this->input->post('id_address') ?? '';
 
 		$arr = array(
 			'id_address' => $id_address
@@ -2636,8 +2632,8 @@ class Orders extends PS_Controller
 	public function set_sender()
 	{
 		$sc = TRUE;
-		$order_code = trim($this->input->post('order_code'));
-		$id_sender = trim($this->input->post('id_sender'));
+		$order_code = trim($this->input->post('order_code') ?? '');
+		$id_sender = trim($this->input->post('id_sender') ?? '');
 
 		$arr = array(
 			'id_sender' => $id_sender
@@ -3486,9 +3482,9 @@ class Orders extends PS_Controller
                     $discText = str_replace(' ', '', $discText);
                     $discText = str_replace('๔', '%', $discText);
       							$disc = explode('%', $discText);
-      							$disc[0] = trim($disc[0]); //--- ตัดช่องว่างออก
-      							$discount = count($disc) == 1 ? floatval($disc[0]) : $price * (floatval($disc[0]) * 0.01); //--- ส่วนลดต่อชิ้น
-      							$discLabel[$i] = count($disc) == 1 ? $disc[0] : number($disc[0], 2).'%';
+      							$disc[0] = trim($disc[0] ?? ''); //--- ตัดช่องว่างออก
+      							$discount = count($disc ?? []) == 1 ? floatval($disc[0] ?? 0) : $price * (floatval($disc[0] ?? 0) * 0.01); //--- ส่วนลดต่อชิ้น
+      							$discLabel[$i] = count($disc ?? []) == 1 ? ($disc[0] ?? '') : number($disc[0] ?? 0, 2).'%';
       							$discAmount += $discount;
       							$price -= $discount;
       						}
@@ -3576,9 +3572,9 @@ class Orders extends PS_Controller
           if($i < 3) //--- limit ไว้แค่ 3 เสต็ป
           {
             $disc = explode('%', $discText);
-            $disc[0] = trim($disc[0]); //--- ตัดช่องว่างออก
-            $discount = count($disc) == 1 ? $disc[0] : $price * ($disc[0] * 0.01); //--- ส่วนลดต่อชิ้น
-            $discLabel[$i] = count($disc) == 1 ? $disc[0] : $disc[0].'%';
+            $disc[0] = trim($disc[0] ?? ''); //--- ตัดช่องว่างออก
+            $discount = count($disc ?? []) == 1 ? ($disc[0] ?? 0) : $price * (($disc[0] ?? 0) * 0.01); //--- ส่วนลดต่อชิ้น
+            $discLabel[$i] = count($disc ?? []) == 1 ? ($disc[0] ?? '') : ($disc[0] ?? 0).'%';
             $discAmount += $discount;
             $price -= $discount;
           }
@@ -3650,8 +3646,8 @@ class Orders extends PS_Controller
             foreach($step as $discount)
             {
               $disc 	= explode('%', $discount);
-              $disc[0] = trim($disc[0]); //--- ตัดช่องว่างออก
-              $discount = count($disc) == 1 ? $disc[0] : $price_c * ($disc[0] * 0.01); //--- ส่วนลดต่อชิ้น
+              $disc[0] = trim($disc[0] ?? ''); //--- ตัดช่องว่างออก
+              $discount = count($disc ?? []) == 1 ? ($disc[0] ?? 0) : $price_c * (($disc[0] ?? 0) * 0.01); //--- ส่วนลดต่อชิ้น
               $discAmount += $discount;
               $price_c -= $discount;
             }
@@ -3703,8 +3699,8 @@ class Orders extends PS_Controller
 					foreach($step as $discount_text)
 					{
 						$disc 	= explode('%', $discount_text);
-						$disc[0] = trim($disc[0]); //--- ตัดช่องว่างออก
-						$discount = count($disc) == 1 ? $disc[0] : $price * ($disc[0] * 0.01); //--- ส่วนลดต่อชิ้น
+						$disc[0] = trim($disc[0] ?? ''); //--- ตัดช่องว่างออก
+						$discount = count($disc ?? []) == 1 ? ($disc[0] ?? 0) : $price * (($disc[0] ?? 0) * 0.01); //--- ส่วนลดต่อชิ้น
 						$discAmount += $discount;
 						$price -= $discount;
 					}
@@ -3777,8 +3773,8 @@ class Orders extends PS_Controller
 					foreach($step as $discount_text)
 					{
 						$disc 	= explode('%', $discount_text);
-						$disc[0] = trim($disc[0]); //--- ตัดช่องว่างออก
-						$discount = count($disc) == 1 ? $disc[0] : $price * ($disc[0] * 0.01); //--- ส่วนลดต่อชิ้น
+						$disc[0] = trim($disc[0] ?? ''); //--- ตัดช่องว่างออก
+						$discount = count($disc ?? []) == 1 ? ($disc[0] ?? 0) : $price * (($disc[0] ?? 0) * 0.01); //--- ส่วนลดต่อชิ้น
 						$discAmount += $discount;
 						$price -= $discount;
 					}

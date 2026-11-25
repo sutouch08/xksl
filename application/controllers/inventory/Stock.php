@@ -1,5 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class Stock extends PS_Controller
 {
@@ -7,8 +9,7 @@ class Stock extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'CHECK';
 	public $title = 'ตรวจสอบสต็อกคงเหลือ(SAP)';
-  public $filter;
-  public $error;
+
   public function __construct()
   {
     parent::__construct();
@@ -56,39 +57,37 @@ class Stock extends PS_Controller
     );
 
     $token = $this->input->post('token');
-
     $data = $this->sap_stock_model->get_list($arr);
+
     if(!empty($data))
     {
-      //--- load excel library
-      $this->load->library('excel');
+      $excel = new Spreadsheet();
+      $sheet = $excel->getActiveSheet();
+      $sheet->setTitle('Stock Zone (SAP)');
 
-      $this->excel->setActiveSheetIndex(0);
-      $this->excel->getActiveSheet()->setTitle('Stock Zone (SAP)');
-
-      $this->excel->getActiveSheet()->setCellValue('A1', 'No.');
-      $this->excel->getActiveSheet()->setCellValue('B1', 'ItemCode');
-      $this->excel->getActiveSheet()->setCellValue('C1', 'OldCode');
-      $this->excel->getActiveSheet()->setCellValue('D1', 'Description');
-      $this->excel->getActiveSheet()->setCellValue('E1', 'BinCode');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'Bin Description');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'Qty');
+      $sheet->setCellValue('A1', 'No.');
+      $sheet->setCellValue('B1', 'ItemCode');
+      $sheet->setCellValue('C1', 'OldCode');
+      $sheet->setCellValue('D1', 'Description');
+      $sheet->setCellValue('E1', 'BinCode');
+      $sheet->setCellValue('F1', 'Bin Description');
+      $sheet->setCellValue('G1', 'Qty');
 
       $no = 1;
       $row = 2;
       foreach($data as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->ItemCode);
+        $sheet->setCellValue('A'.$row, $no);
+        $sheet->setCellValue('B'.$row, $rs->ItemCode);
         if(!empty($rs->U_OLDCODE))
         {
-          $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->U_OLDCODE);
+          $sheet->setCellValue('C'.$row, $rs->U_OLDCODE);
         }
 
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->ItemName);
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->BinCode);
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->Descr);
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->OnHandQty);
+        $sheet->setCellValue('D'.$row, $rs->ItemName);
+        $sheet->setCellValue('E'.$row, $rs->BinCode);
+        $sheet->setCellValue('F'.$row, $rs->Descr);
+        $sheet->setCellValue('G'.$row, $rs->OnHandQty);
         $no++;
         $row++;
       }
@@ -98,16 +97,13 @@ class Stock extends PS_Controller
     $file_name = "StockZone(SAP).xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
   }
-
 
   function clear_filter(){
     $filter = array('item_code', 'zone_code', 'show_system');
     clear_filter($filter);
     echo 'done';
   }
-
-} //--- end class
-?>
+}

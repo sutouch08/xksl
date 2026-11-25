@@ -326,7 +326,7 @@ class Orders extends REST_Controller
       $is_etax = empty($data->ETAX) ? 0 : ($data->ETAX == 'Y' && $tax_status == 1 ? 1 : 0);
       $bill_to = empty($data->bill_to) ? NULL : (array) $data->bill_to;
       $ship_to = empty($data->ship_to) ? NULL : (array) $data->ship_to;
-      $customer_ref = empty(trim($data->customer_ref)) ? NULL : get_null(trim($data->customer_ref));
+      $customer_ref = empty(trim($data->customer_ref ?? '')) ? NULL : get_null(trim($data->customer_ref ?? ''));
 
       $taxType = array(
         'NIDN' => 'NIDN', //-- บุคคลธรรมดา

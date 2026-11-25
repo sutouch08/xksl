@@ -7,9 +7,7 @@ class Adjust_transform extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = '';
 	public $title = 'ตัดยอดแปรสภาพ';
-  public $filter;
-  public $error;
-
+ 
   public function __construct()
   {
     parent::__construct();
@@ -84,7 +82,7 @@ class Adjust_transform extends PS_Controller
             'from_zone' => $zone->code,
             'date_add' => $date_add,
             'user' => get_cookie('uname'),
-            'remark' => get_null(trim($this->input->post('remark')))
+            'remark' => get_null(trim($this->input->post('remark') ?? ''))
           );
 
           if(! $this->adjust_transform_model->add($ds))
@@ -157,9 +155,9 @@ class Adjust_transform extends PS_Controller
     if($this->input->post('code'))
     {
       $code = $this->input->post('code');
-      $date_add = db_date($this->input->post('date_add'), TRUE);
+      $date_add = db_date($this->input->post('date_add') ?? '', TRUE);
       $zone = $this->zone_model->get($this->input->post('zone_code'));
-      $remark = get_null($this->input->post('remark'));
+      $remark = get_null($this->input->post('remark') ?? '');
 
       if(!empty($zone))
       {
@@ -452,7 +450,7 @@ class Adjust_transform extends PS_Controller
                   $arr = array(
                     'issue_code' => NULL,
                     'status' => 2,
-                    'cancle_reason' => trim($this->input->post('reason')),
+                    'cancle_reason' => trim($this->input->post('reason') ?? ''),
                     'cancle_user' => $this->_user->uname
                   );
 
@@ -520,7 +518,7 @@ class Adjust_transform extends PS_Controller
       if(! $this->export->export_transform_goods_issue($code))
       {
         $sc = FALSE;
-        $this->error = trim($this->export->error);
+        $this->error = trim($this->export->error ?? '');
       }
     }
     else
@@ -560,7 +558,7 @@ class Adjust_transform extends PS_Controller
   public function get_closed_transform_order()
   {
     $this->load->model('inventory/transform_model');
-    $code = trim($_REQUEST['term']);
+    $code = trim($_REQUEST['term'] ?? '');
     $limit = 20;
 
     echo $this->transform_model->get_closed_transform_order($code, $limit);

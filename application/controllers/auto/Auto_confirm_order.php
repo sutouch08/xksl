@@ -64,6 +64,4 @@ class Auto_confirm_order extends CI_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
 	}
-
-} //--- end class
- ?>
+}

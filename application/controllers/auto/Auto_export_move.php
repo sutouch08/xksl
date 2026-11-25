@@ -18,13 +18,6 @@ class Auto_export_move extends CI_Controller
     $this->load->view('auto/auto_export_move');
   }
 
-
-  public function auto_export_move()
-  {
-
-  }
-
-
   //--- export to SAP
   public function export_move()
   {
@@ -36,7 +29,7 @@ class Auto_export_move extends CI_Controller
       if(! $this->export->export_move($code))
       {
         $sc = FALSE;
-        $this->error = trim($this->export->error);
+        $this->error = ($this->export->error);
       }
     }
 
@@ -66,7 +59,4 @@ class Auto_export_move extends CI_Controller
       echo 'not_found';
     }
   }
-
-
-} //--- end class
- ?>
+} 

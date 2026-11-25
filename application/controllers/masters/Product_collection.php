@@ -25,17 +25,12 @@ class Product_collection extends PS_Controller
       'active' => get_filter('active', 'collection_active', 'all')
     );
 
-		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-
-		$segment = 4; //-- url segment
+		$segment = 4;
 		$rows = $this->product_collection_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$filter['data'] = $this->product_collection_model->get_list($filter, $perpage, $this->uri->segment($segment));
-
-    $data = array();
-
+   
     if(!empty($filter['data']))
     {
       foreach($filter['data'] as $rs)
@@ -45,7 +40,6 @@ class Product_collection extends PS_Controller
     }
 
 		$this->pagination->initialize($init);
-
     $this->load->view('masters/product_collection/product_collection_list', $filter);
   }
 
@@ -59,8 +53,8 @@ class Product_collection extends PS_Controller
   public function add()
   {
     $sc = TRUE;
-    $code = trim($this->input->post('code'));
-    $name = trim($this->input->post('name'));
+    $code = trim($this->input->post('code') ?? '');
+    $name = trim($this->input->post('name') ?? '');
     $active = $this->input->post('active') == 1 ? 1 : 0;
 
     if( ! empty($code) && ! empty($name))
@@ -132,7 +126,7 @@ class Product_collection extends PS_Controller
   {
     $sc = TRUE;
     $id = $this->input->post('id');
-    $name = trim($this->input->post('name'));
+    $name = trim($this->input->post('name') ?? '');
     $active = $this->input->post('active') == 1 ? 1 : 0;
 
     if( ! empty($name))
@@ -227,6 +221,4 @@ class Product_collection extends PS_Controller
 		$filter = array('collection_code', 'collection_name', 'collection_active');
     return clear_filter($filter);
 	}
-
-}//--- end class
- ?>
+}

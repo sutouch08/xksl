@@ -11,7 +11,7 @@ class Discount
 	}
 
 
-	public function getItemDiscount($code, $customer_code, $qty, $payment_code, $channels_code, $date = "")
+	public function getItemDiscount(?string $code, ?string $customer_code, $qty, ?string $payment_code, ?string $channels_code, ?string $date = "")
 	{
     $ci->load->model('masters/products');
     $ci->load->model('masters/customers');

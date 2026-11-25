@@ -3,9 +3,9 @@
 function discount_policy_in($txt)
 {
   $sc = "0";
-  $CI =& get_instance();
-  $CI->load->model('discount/discount_policy_model');
-  $rs = $CI->discount_policy_model->search($txt);
+  $ci =& get_instance();
+  $ci->load->model('discount/discount_policy_model');
+  $rs = $ci->discount_policy_model->search($txt);
 
   if(!empty($rs))
   {
@@ -17,5 +17,3 @@ function discount_policy_in($txt)
 
   return $sc;
 }
-
-?>

@@ -203,6 +203,4 @@ class Sync_items extends CI_Controller
     echo $count;
   }
 
-} //--- end class
-
- ?>
+} 

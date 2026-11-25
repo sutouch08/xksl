@@ -1,11 +1,11 @@
 <?php
-function select_active_collection($code = NULL)
+function select_active_collection($code = '')
 {
-  $CI =& get_instance();
-  $CI->load->model('masters/product_collection_model');
-  $active = 1;
-  $result = $CI->product_collection_model->get_all();
+  $ci =& get_instance();
+  $ci->load->model('masters/product_collection_model');  
+  $result = $ci->product_collection_model->get_all();
   $ds = '';
+
   if(!empty($result))
   {
     foreach($result as $rs)
@@ -21,12 +21,13 @@ function select_active_collection($code = NULL)
 }
 
 
-function select_all_collection($code = NULL)
+function select_all_collection($code = '')
 {
-  $CI =& get_instance();
-  $CI->load->model('masters/product_collection_model');
-  $result = $CI->product_collection_model->get_all();
+  $ci =& get_instance();
+  $ci->load->model('masters/product_collection_model');
+  $result = $ci->product_collection_model->get_all();
   $ds = '';
+  
   if(!empty($result))
   {
     foreach($result as $rs)
@@ -37,6 +38,3 @@ function select_all_collection($code = NULL)
 
   return $ds;
 }
-
-
- ?>

@@ -91,6 +91,4 @@ class Auto_send_delivery extends PS_Controller
 
     return NULL;
   }
-
-} //--- end class
- ?>
+}

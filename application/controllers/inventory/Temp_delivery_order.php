@@ -1,5 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class Temp_delivery_order extends PS_Controller
 {
@@ -7,7 +9,7 @@ class Temp_delivery_order extends PS_Controller
 	public $menu_group_code = 'TE';
   public $menu_sub_group_code = 'TESALE';
 	public $title = 'ตรวจสอบ ออเดอร์ - ถังกลาง';
-  public $filter;
+  
   public function __construct()
   {
     parent::__construct();
@@ -27,21 +29,12 @@ class Temp_delivery_order extends PS_Controller
     );
 
 		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
+		$perpage = get_rows();		
 		$segment  = 4; //-- url segment
-		$rows     = $this->temp_delivery_model->count_rows($filter, 8);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->temp_delivery_model->get_list($filter, $perpage, $this->uri->segment($segment), 8);
-
+		$rows = $this->temp_delivery_model->count_rows($filter, 8);		
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$orders = $this->temp_delivery_model->get_list($filter, $perpage, $this->uri->segment($segment), 8);
     $filter['orders'] = $orders;
-
 		$this->pagination->initialize($init);
     $this->load->view('inventory/temp_delivery/temp_list', $filter);
   }
@@ -54,13 +47,15 @@ class Temp_delivery_order extends PS_Controller
     $this->load->model('masters/products_model');
     $detail = $this->temp_delivery_model->get_detail($id);
     $code = "";
+
     if(!empty($detail))
     {
       foreach($detail as $rs)
       {
         $rs->onhand = $this->stock_model->get_stock_zone($rs->BinCode, $rs->ItemCode);
         $code = $rs->U_ECOMNO;
-        $rs->hilight = NULL;
+        $rs->hilight = "";
+
         if($rs->Quantity > $rs->onhand)
         {
           if($this->products_model->is_count_stock($rs->ItemCode))
@@ -122,26 +117,24 @@ class Temp_delivery_order extends PS_Controller
     $channels_title = 'ยอดต่าง = ยอดในโซน - ยอดที่ออเดอร์';
     $pd_title = 'ยอดติดลบคือยอดที่มีในโซนน้อยกว่าที่สั่งมา';
 
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Item Diff');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();
+    $sheet->setTitle('Item Diff');
 
     //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', $report_title);
-    $this->excel->getActiveSheet()->mergeCells('A1:G1');
-    $this->excel->getActiveSheet()->setCellValue('A2', $channels_title);
-    $this->excel->getActiveSheet()->mergeCells('A2:G2');
-    $this->excel->getActiveSheet()->setCellValue('A3', $pd_title);
-    $this->excel->getActiveSheet()->mergeCells('A3:G3');
-    $this->excel->getActiveSheet()->setCellValue('A4', 'วันที่เอกสาร : '.thai_date(now()));
-    $this->excel->getActiveSheet()->mergeCells('A4:G4');
+    $sheet->setCellValue('A1', $report_title);
+    $sheet->mergeCells('A1:G1');
+    $sheet->setCellValue('A2', $channels_title);
+    $sheet->mergeCells('A2:G2');
+    $sheet->setCellValue('A3', $pd_title);
+    $sheet->mergeCells('A3:G3');
+    $sheet->setCellValue('A4', 'วันที่เอกสาร : '.thai_date(now()));
+    $sheet->mergeCells('A4:G4');
 
-    $this->excel->getActiveSheet()->setCellValue('A5', 'ลำดับ');
-    $this->excel->getActiveSheet()->setCellValue('B5', 'BinCode');
-    $this->excel->getActiveSheet()->setCellValue('C5', 'ItemCode');
-    $this->excel->getActiveSheet()->setCellValue('D5', 'onhand - order');
+    $sheet->setCellValue('A5', 'ลำดับ');
+    $sheet->setCellValue('B5', 'BinCode');
+    $sheet->setCellValue('C5', 'ItemCode');
+    $sheet->setCellValue('D5', 'onhand - order');
 
     $filter = array(
       'code' => $this->input->post('code'),
@@ -236,15 +229,15 @@ class Temp_delivery_order extends PS_Controller
             $diff = $stock - $qty;
 
             //--- ลำดับ
-            $this->excel->getActiveSheet()->setCellValue('A'.$line, $no);
+            $sheet->setCellValue('A'.$line, $no);
 
-            $this->excel->getActiveSheet()->setCellValue('B'.$line, $bin);
+            $sheet->setCellValue('B'.$line, $bin);
 
             //--- เลขที่เอกสาร (SO)
-            $this->excel->getActiveSheet()->setCellValue('C'.$line, $item);
+            $sheet->setCellValue('C'.$line, $item);
 
             //--- เลขที่อ้างอิง
-            $this->excel->getActiveSheet()->setCellValue('D'.$line, $diff);
+            $sheet->setCellValue('D'.$line, $diff);
 
             $no++;
             $line++;
@@ -257,10 +250,9 @@ class Temp_delivery_order extends PS_Controller
     $file_name = "Stock Diff.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
   }
-
 
   public function clear_filter()
   {
@@ -273,9 +265,5 @@ class Temp_delivery_order extends PS_Controller
     );
 
     clear_filter($filter);
-
-    echo 'done';
   }
-
-}//--- end class
-?>
+}

@@ -11,8 +11,7 @@ class Product_tab extends PS_Controller
   public function __construct()
   {
     parent::__construct();
-    $this->home = base_url().'masters/product_tab';
-    //--- load model
+    $this->home = base_url().'masters/product_tab';    
     $this->load->model('masters/product_tab_model');
     $this->load->helper('product_tab');
   }
@@ -25,19 +24,12 @@ class Product_tab extends PS_Controller
       'parent' => get_filter('parent', 'parent', '')
     );
 
-    //--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-		$segment  = 4; //-- url segment
-		$rows     = $this->product_tab_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$segment  = 4;
+		$rows = $this->product_tab_model->count_rows($filter);
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$tabs = $this->product_tab_model->get_list($filter, $perpage, $this->uri->segment($segment));
+    
     if(!empty($tabs))
     {
       foreach($tabs as $rs)
@@ -67,7 +59,7 @@ class Product_tab extends PS_Controller
   {
     if($this->input->post('tab_name'))
     {
-      $name = trim($this->input->post('tab_name'));
+      $name = trim($this->input->post('tab_name') ?? '');
       $parent = $this->input->post('tabs');
 
       if(! $this->product_tab_model->isExists('name', $name))
@@ -111,7 +103,7 @@ class Product_tab extends PS_Controller
   {
     if($this->input->post('tab_name'))
     {
-      $name = trim($this->input->post('tab_name'));
+      $name = trim($this->input->post('tab_name') ?? '');
       $parent = $this->input->post('tabs');
 
       if(! $this->product_tab_model->isExists('name', $name, $id))
@@ -164,8 +156,6 @@ class Product_tab extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
+}
 
 
-
-}//--- end class
-?>

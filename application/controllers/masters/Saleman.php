@@ -21,24 +21,13 @@ class Saleman extends PS_Controller{
 			'name' => get_filter('name', 'name', ''),
 			'active' => get_filter('active', 'active', 'all')
 		);
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
+		
+		$perpage = get_rows();
+		$segment = 4; 
 		$rows = $this->slp_model->count_rows($filter);
-
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-
 		$rs = $this->slp_model->get_list($filter, $perpage, $this->uri->segment($segment));
 		$filter['data'] = $rs;
-
 		$this->pagination->initialize($init);
     $this->load->view('masters/saleman/saleman_view', $filter);
   }
@@ -85,8 +74,4 @@ class Saleman extends PS_Controller{
 		$filter = array('name', 'active');
 		clear_filter($filter);
 	}
-
-}//--- end class
-
-
- ?>
+}

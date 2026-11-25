@@ -108,9 +108,4 @@ class Authentication extends CI_Controller
     delete_cookie('id_profile');
     redirect($this->home);
 	}
-
-
-} //--- end class
-
-
- ?>
+}

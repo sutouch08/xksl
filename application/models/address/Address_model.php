@@ -49,7 +49,6 @@ class Address_model extends CI_Model
   }
 
 
-
   public function get_default_address($code)
   {
     $rs = $this->db
@@ -68,10 +67,10 @@ class Address_model extends CI_Model
   }
 
 
-
   public function get_shipping_address($code)
   {
     $rs = $this->db->where('code', $code)->get('address_ship_to');
+
     if($rs->num_rows() > 0)
     {
       return $rs->result();
@@ -79,12 +78,12 @@ class Address_model extends CI_Model
 
     return NULL;
   }
-
 
 
 	public function get_ship_to_address($code)
   {
     $rs = $this->db->where('customer_code', $code)->get('address_ship_to');
+
     if($rs->num_rows() > 0)
     {
       return $rs->result();
@@ -92,6 +91,7 @@ class Address_model extends CI_Model
 
     return NULL;
   }
+
 
 	public function get_default_ship_to_address_id($code)
 	{
@@ -125,19 +125,16 @@ class Address_model extends CI_Model
   }
 
 
-
   public function update_shipping_address($id, array $ds = array())
   {
     return $this->db->where('id', $id)->update('address_ship_to', $ds);
   }
 
 
-
   public function delete_shipping_address($id)
   {
     return $this->db->where('id', $id)->delete('address_ship_to');
   }
-
 
 
   public function set_default_shipping_address($id)
@@ -156,16 +153,18 @@ class Address_model extends CI_Model
   }
 
 
-
   public function get_id($code, $address = NULL)
   {
     $this->db->select('id')->where('code', $code);
+
     if($address != NULL)
     {
       $this->db->where('address', $address);
     }
+
     $this->db->order_by('is_default', 'DESC')->limit(1);
     $rs = $this->db->get('address_ship_to');
+
     if($rs->num_rows() === 1)
     {
       return $rs->row()->id;
@@ -191,7 +190,6 @@ class Address_model extends CI_Model
   public function is_valid_sub_district($sub_district)
   {
     $count = $this->db->where('tumbon', $sub_district)->count_all_results('address_info');
-
     return $count > 0 ? TRUE : FALSE;
   }
 
@@ -199,21 +197,18 @@ class Address_model extends CI_Model
   public function is_valid_district($district)
   {
     $count = $this->db->where('amphur', $district)->count_all_results('address_info');
-
     return $count > 0 ? TRUE : FALSE;
   }
 
   public function is_valid_province($province)
   {
     $count = $this->db->where('province', $province)->count_all_results('address_info');
-
     return $count > 0 ? TRUE : FALSE;
   }
 
   public function is_valid_postcode($postcode)
   {
     $count = $this->db->where('zipcode', $postcode)->count_all_results('address_info');
-
     return $count > 0 ? TRUE : FALSE;
   }
 
@@ -228,6 +223,4 @@ class Address_model extends CI_Model
 
     return $count > 0 ? TRUE : FALSE;
   }
-} //--- end class
-
- ?>
+}

@@ -12,8 +12,6 @@ class Discount_policy_model extends CI_Model
     return $this->db->insert('discount_policy', $ds);
   }
 
-
-
   public function update($id, array $ds = array())
   {
     if(!empty($ds))
@@ -23,8 +21,6 @@ class Discount_policy_model extends CI_Model
 
     return FALSE;
   }
-
-
 
   public function delete($id)
   {
@@ -49,9 +45,6 @@ class Discount_policy_model extends CI_Model
 
     return $result;
   }
-
-
-
 
 
   public function get($id)
@@ -94,9 +87,6 @@ class Discount_policy_model extends CI_Model
   }
 
 
-
-
-
   public function count_rows($code, $name, $active, $start, $end)
   {
     $qr = "SELECT id FROM discount_policy WHERE code != '' ";
@@ -131,7 +121,6 @@ class Discount_policy_model extends CI_Model
 
     return 0;
   }
-
 
 
   public function get_data($code, $name, $active, $start, $end, $perpage = '', $offset = '')
@@ -172,9 +161,6 @@ class Discount_policy_model extends CI_Model
   }
 
 
-
-
-
   public function get_policy_by_code($code)
   {
     $rs = $this->db->where('code', $code)->get('discount_policy');
@@ -187,15 +173,12 @@ class Discount_policy_model extends CI_Model
   }
 
 
-
-
   public function get_max_code($code)
   {
     $qr = "SELECT MAX(code) AS code FROM discount_policy WHERE code LIKE '".$code."%' ORDER BY code DESC";
     $rs = $this->db->query($qr);
     return $rs->row()->code;
   }
-
 
 
   public function search($txt)
@@ -211,7 +194,4 @@ class Discount_policy_model extends CI_Model
 
     return array();
   }
-
-} //--- end class
-
- ?>
+}

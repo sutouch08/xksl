@@ -1,12 +1,13 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Current_stock_consignment extends PS_Controller
 {
   public $menu_code = 'RICSCM';
 	public $menu_group_code = 'RE';
   public $menu_sub_group_code = 'REINVT';
 	public $title = 'รายงานสินค้าคงเหลือปัจจุบัน (ฝากขายเทียม)';
-  public $filter;
+  
   public function __construct()
   {
     parent::__construct();
@@ -19,7 +20,6 @@ class Current_stock_consignment extends PS_Controller
 
   public function index()
   {
-
 		//--- จำนวนคงเหลือ มูลค่าคงเหลือ
     $stock = $this->current_stock_consignment_report_model->get_stock_summary();
 
@@ -36,7 +36,6 @@ class Current_stock_consignment extends PS_Controller
 		$ds['product_group'] = $this->product_group_model->get_data();
 
     $this->load->view('report/inventory/current_stock_consignment_report_view', $ds);
-
   }
 
 
@@ -46,18 +45,13 @@ class Current_stock_consignment extends PS_Controller
     ini_set('sqlsrv.ClientBufferMaxKBSize','524288'); // Setting to 512M
     ini_set('pdo_sqlsrv.client_buffer_max_kb_size','524288'); // Setting to 512M - for pdo_sqlsrv
     ini_set('max_execution_time', 600);
-    $show_stock = TRUE;
-
+   
     //--- จำนวนคงเหลือ มูลค่าคงเหลือ
     $stock = $this->current_stock_consignment_report_model->get_stock_summary();
-
     $sumQty = !empty($stock) ? $stock->qty : 0;
-
     $sumCost = !empty($stock) ? $stock->amount : 0;
-
     //--- จำนวนรุ่นสินค้า
     $sumStyle = $this->current_stock_consignment_report_model->get_count_style();
-
     //--- จำนวนรายการสินค้า
     $sumItem = $this->current_stock_consignment_report_model->get_count_item();
 
@@ -230,13 +224,4 @@ class Current_stock_consignment extends PS_Controller
     }
   }
 
-} //--- end class
-
-
-
-
-
-
-
-
- ?>
+} 

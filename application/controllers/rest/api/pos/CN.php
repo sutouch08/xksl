@@ -46,12 +46,9 @@ class CN extends REST_Controller
   {
     $api_path = $this->path."create";
 
-    $sc = TRUE;
-
-    //--- Get raw post data
+    $sc = TRUE;    
     $json = file_get_contents("php://input");
-
-    $data = json_decode($json);
+    $data = json_decode($json ?? '{}');
 
     if(empty($data))
     {
@@ -578,7 +575,7 @@ class CN extends REST_Controller
     }
 
     $code = $data->code;
-    $reason = trim($data->cancel_reason);
+    $reason = trim($data->cancel_reason ?? '');
     $doc = $this->return_order_model->get($code);
 
     if( empty($doc))

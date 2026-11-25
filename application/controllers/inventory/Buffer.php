@@ -7,8 +7,7 @@ class Buffer extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'CHECK';
 	public $title = 'ตรวจสอบ BUFFER';
-  public $filter;
-  public $error;
+  
   public function __construct()
   {
     parent::__construct();
@@ -52,7 +51,7 @@ class Buffer extends PS_Controller
 	public function delete_buffer()
 	{
 		$sc = TRUE;
-		$id = trim($this->input->post('id'));
+		$id = $this->input->post('id');
 		if(!empty($id))
 		{
 			$rs = $this->buffer_model->delete($id);

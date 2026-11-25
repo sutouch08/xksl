@@ -6,9 +6,7 @@ class Sponsor extends PS_Controller
   public $menu_code = 'SOODSP';
 	public $menu_group_code = 'SO';
   public $menu_sub_group_code = 'ORDER';
-	public $title = 'สปอนเซอร์';
-  public $filter;
-  public $error;
+	public $title = 'สปอนเซอร์';  
 
   public function __construct()
   {
@@ -80,25 +78,16 @@ class Sponsor extends PS_Controller
     $button['not_save'] = empty($filter['notSave']) ? '' : 'btn-info';
     $button['only_me'] = empty($filter['onlyMe']) ? '' : 'btn-info';
     $button['is_expire'] = empty($filter['isExpire']) ? '' : 'btn-info';
-
-
     $filter['state_list'] = empty($state_list) ? NULL : $state_list;
+		
+		$perpage = get_rows();		
+    $role = 'P';
+		$segment = 4;
+		$rows = $this->orders_model->count_rows($filter, $role);
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$orders = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), $role);
+    $ds = array();
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-    $role     = 'P'; //--- P = sponsor;
-		$segment  = 4; //-- url segment
-		$rows     = $this->orders_model->count_rows($filter, $role);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), $role);
-    $ds       = array();
     if(!empty($orders))
     {
       foreach($orders as $rs)
@@ -147,8 +136,7 @@ class Sponsor extends PS_Controller
     $sc = TRUE;
 
 		$this->load->model('masters/warehouse_model');
-
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
@@ -156,7 +144,7 @@ class Sponsor extends PS_Controller
       $date_add = db_date($data->date_add);
       $code = $this->get_new_code($date_add);
 
-      $role = 'P'; //--- P = Sponsor
+      $role = 'P';
 
       $wh = $this->warehouse_model->get($data->warehouse_code);
       $customer = $this->customers_model->get($data->customer_code);
@@ -200,7 +188,6 @@ class Sponsor extends PS_Controller
           $sc = FALSE;
           $this->error = "Invalid Warehouse code";
         }
-
       }
       else
       {
@@ -232,6 +219,7 @@ class Sponsor extends PS_Controller
 		$this->load->helper('sender');
     $ds = array();
     $rs = $this->orders_model->get($code);
+
     if(!empty($rs))
     {
       $rs->customer_name = empty($rs->customer_name) ? $this->customers_model->get_name($rs->customer_code) : $rs->customer_name;
@@ -279,7 +267,7 @@ class Sponsor extends PS_Controller
   {
     $sc = TRUE;
 
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
@@ -359,6 +347,7 @@ class Sponsor extends PS_Controller
     $this->load->helper('product_tab');
     $ds = array();
     $rs = $this->orders_model->get($code);
+
     if($rs->state <= 3)
     {
       $rs->customer_name = $this->customers_model->get_name($rs->customer_code);
@@ -529,4 +518,3 @@ class Sponsor extends PS_Controller
     clear_filter($filter);
   }
 }
-?>

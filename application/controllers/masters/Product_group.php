@@ -19,22 +19,12 @@ class Product_group extends PS_Controller
   public function index()
   {
 		$code = get_filter('code', 'pd_group_code', '');
-		$name = get_filter('name', 'pd_group_name_name', '');
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
+		$name = get_filter('name', 'pd_group_name_name', '');		
+		$perpage = get_rows();
+		$segment = 4;
 		$rows = $this->product_group_model->count_rows($code, $name);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$group = $this->product_group_model->get_data($code, $name, $perpage, $this->uri->segment($segment));
-
     $data = array();
 
     if(!empty($group))
@@ -99,7 +89,6 @@ class Product_group extends PS_Controller
       {
         if($this->product_group_model->add($ds))
         {
-          //--- export to sap
           $this->export_sap_product_group($code, $code);
 
           set_message('เพิ่มข้อมูลเรียบร้อยแล้ว');
@@ -174,7 +163,6 @@ class Product_group extends PS_Controller
       {
         if($this->product_group_model->update($old_code, $ds) === TRUE)
         {
-          //--- export to sap
           $this->export_sap_product_group($code, $old_code);
 
           set_message('ปรับปรุงข้อมูลเรียบร้อยแล้ว');
@@ -246,7 +234,7 @@ class Product_group extends PS_Controller
           $arr['OLDCODE'] = $old_code;
         }
 
-        //return $this->product_group_model->update_sap_product_group($old_code, $arr);
+        return $this->product_group_model->update_sap_product_group($old_code, $arr);
       }
       else
       {
@@ -270,9 +258,6 @@ class Product_group extends PS_Controller
   public function clear_filter()
 	{
 		$filter = array('pd_group_code', 'pd_group_name');
-    clear_filter($filter);
-		echo 'done';
+    clear_filter($filter);		
 	}
-
-}//--- end class
- ?>
+}

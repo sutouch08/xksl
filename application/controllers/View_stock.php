@@ -30,8 +30,5 @@ class View_stock extends PS_Controller
 	{
 		$this->load->view('view_stock');
 	}
-
-
-
 }
  ?>

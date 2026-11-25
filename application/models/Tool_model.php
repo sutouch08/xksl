@@ -35,8 +35,4 @@ class Tool_model extends CI_Model
 
     return NULL;
   }
-
-
-}//--- end class
-
-?>
+}

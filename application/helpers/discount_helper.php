@@ -50,7 +50,8 @@ function discountLabel($disc = 0, $disc2 = 0, $disc3 = 0)
 function getDiscLabel($disc)
 {
 	$arr = explode('%', $disc);
-	if( count($arr) > 1)
+
+	if( count($arr ?? []) > 1)
 	{
 		return trim($arr[0]).'%';
 	}
@@ -68,4 +69,3 @@ function discountAmountToPercent($amount, $qty, $price)
 	return 0;
 }
 
-?>

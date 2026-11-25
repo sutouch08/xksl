@@ -7,8 +7,7 @@ class Check_stock_diff extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = '';
 	public $title = 'ตรวจนับสต็อก(เก็บยอดต่าง)';
-  public $filter;
-  public $error;
+  
   public function __construct()
   {
     parent::__construct();
@@ -145,7 +144,7 @@ class Check_stock_diff extends PS_Controller
 
 
 
-  public function check_barcode($zone_code = NULL, $is_checked = NULL)
+  public function check_barcode($zone_code, $is_checked)
   {
     $zone_code = empty($zone_code) ? $this->input->post('zone_code') : $zone_code;
     $product_code = $this->input->post('product_code');
@@ -215,43 +214,6 @@ class Check_stock_diff extends PS_Controller
     $ds['enable_barcode'] = TRUE;
     $this->load->view('inventory/check_stock_diff/check_process', $ds);
   }
-
-
-  // public function check_barcode($zone_code = NULL, $is_checked = NULL)
-  // {
-  //   $zone_code = empty($zone_code) ? $this->input->post('zone_code') : $zone_code;
-  //   $zone = !empty($zone_code) ? $this->zone_model->get($zone_code) : NULL;
-  //
-  //   if(!empty($zone))
-  //   {
-  //     $details = $this->check_stock_diff_model->get_active_diff_zone($zone_code);
-  //     if(!empty($details))
-  //     {
-  //       //---- loop and add diff qty
-  //       foreach($details as $rs)
-  //       {
-  //         $item = $this->products_model->get($rs->product_code);
-  //         $rs->barcode = $item->barcode;
-  //         $rs->old_code = $item->old_code;
-  //         $diff_qty = $rs->qty;
-  //         $onHandQty = $this->stock_model->get_stock_zone($zone_code, $rs->product_code);
-  //         $buffer_qty = $this->buffer_model->get_buffer_zone($zone_code, $rs->product_code);
-  //         $rs->diff_qty = $diff_qty;
-  //         $rs->count_qty = ($onHandQty - $buffer_qty) + $diff_qty;
-  //         $rs->OnHandQty = ($onHandQty - $buffer_qty);
-  //       }
-  //     }
-  //   }
-  //
-  //   $ds['zone_code'] = !empty($zone) ? $zone->code : NULL;
-  //   $ds['product_code'] = NULL;
-  //   $ds['zone_name'] = !empty($zone) ? $zone->name : NULL;
-  //   $ds['details'] = !empty($details) ? $details : NULL;
-  //   $ds['checked'] = $is_checked;
-  //   $ds['enable_search'] = FALSE;
-  //   $ds['enable_barcode'] = TRUE;
-  //   $this->load->view('inventory/check_stock_diff/check_process', $ds);
-  // }
 
 
   ///----- check zone_exists or not

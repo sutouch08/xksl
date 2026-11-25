@@ -1,13 +1,13 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Consign_so extends PS_Controller
 {
   public $menu_code = 'SOCCSO';
 	public $menu_group_code = 'SO';
   public $menu_sub_group_code = 'ORDER';
-	public $title = 'ฝากขาย(ใบกำกับ)';
-  public $filter;
+	public $title = 'ฝากขาย(ใบกำกับ)';  
   public $role = 'C';
 
   public function __construct()
@@ -31,10 +31,8 @@ class Consign_so extends PS_Controller
     $this->load->helper('discount');
     $this->load->helper('zone');
     $this->load->helper('warehouse');
-
-    $this->filter = getConfig('STOCK_FILTER');
   }
-
+  
 
   public function index()
   {
@@ -67,7 +65,6 @@ class Consign_so extends PS_Controller
     );
 
     $state_list = array();
-
     $button = array();
 
     for($i =1; $i <= 9; $i++)
@@ -84,27 +81,14 @@ class Consign_so extends PS_Controller
     $button['not_save'] = empty($filter['notSave']) ? '' : 'btn-info';
     $button['only_me'] = empty($filter['onlyMe']) ? '' : 'btn-info';
     $button['is_expire'] = empty($filter['isExpire']) ? '' : 'btn-info';
-
-
     $filter['state_list'] = empty($state_list) ? NULL : $state_list;
-
-
-
-
-		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
+		$segment = 4;
+		$rows = $this->orders_model->count_rows($filter, 'C');
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$orders = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), 'C');
+    $ds = array();
 
-		$segment  = 4; //-- url segment
-		$rows     = $this->orders_model->count_rows($filter, 'C');
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), 'C');
-    $ds       = array();
     if(!empty($orders))
     {
       foreach($orders as $rs)
@@ -120,15 +104,14 @@ class Consign_so extends PS_Controller
     $filter['orders'] = $ds;
     $filter['state'] = $state;
     $filter['btn'] = $button;
-
 		$this->pagination->initialize($init);
     $this->load->view('order_consign/consign_list', $filter);
   }
 
-  //---- รายการรออนุมัติ
+
   public function get_un_approve_list()
   {
-    $role = 'C'; //--- ฝากขายเปิดใบกำกับ
+    $role = 'C';
     $rows = $this->orders_model->count_un_approve_rows($role);
     $limit = empty($this->input->get('limit')) ? 20 : intval($this->input->get('limit'));
     $list = $this->orders_model->get_un_approve_list($role, $limit);
@@ -157,7 +140,6 @@ class Consign_so extends PS_Controller
 
     echo json_encode($data);
   }
-
 
 
   public function add_new()
@@ -526,12 +508,7 @@ class Consign_so extends PS_Controller
       {
         if($doc->state < 3 && $doc->status != 2)
         {
-          $uid = genUid();
-          $import = 0;
-          $success = 0;
-          $failed = 0;
-          $skip = 0;
-
+          $uid = genUid();         
           $file = isset( $_FILES['uploadFile'] ) ? $_FILES['uploadFile'] : FALSE;
         	$path = $this->config->item('upload_path').'WC/';
           $file	= 'uploadFile';
@@ -552,15 +529,11 @@ class Consign_so extends PS_Controller
             $this->error = $this->upload->display_errors();
       		}
           else
-          {
-            $this->load->library('excel');
-            $info = $this->upload->data();
-            /// read file
-      			$excel = PHPExcel_IOFactory::load($info['full_path']);
-      			//get only the Cell Collection
-            $cs	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
-
-            $count = count($cs);
+          {            
+            $info = $this->upload->data();           
+      			$excel = IOFactory::load($info['full_path']);
+            $cs	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
+            $count = count($cs ?? []);
             $limit = intval(getConfig('IMPORT_ROWS_LIMIT')) + 1;
 
             if($count > $limit)
@@ -583,25 +556,25 @@ class Consign_so extends PS_Controller
 
                 if($i == 1)
                 {
-                  if(trim($rs['A']) != 'ProductCode')
+                  if(trim($rs['A'] ?? '') != 'ProductCode')
                   {
                     $sc = FALSE;
                     $this->error = "Column A should be 'ProductCode'";
                   }
 
-                  if(trim($rs['B']) != 'Price')
+                  if(trim($rs['B'] ?? '') != 'Price')
                   {
                     $sc = FALSE;
                     $this->error = "Column B should be 'Price'";
                   }
 
-                  if(trim($rs['C']) != 'GP [%]')
+                  if(trim($rs['C'] ?? '') != 'GP [%]')
                   {
                     $sc = FALSE;
                     $this->error = "Column C should be 'GP [%]'";
                   }
 
-                  if(trim($rs['D']) != 'Qty')
+                  if(trim($rs['D'] ?? '') != 'Qty')
                   {
                     $sc = FALSE;
                     $this->error = "Column C should be 'Qty'";
@@ -612,20 +585,20 @@ class Consign_so extends PS_Controller
                 else
                 {
                   $gp = str_replace('%', '', $doc->gp);
-                  $gp = trim($gp);
+                  $gp = trim($gp ?? '');
 
-                  if($sc === TRUE && ! empty($rs['A']) && ! empty($rs['D']))
+                  if($sc === TRUE && ! empty($rs['A'] ?? '') && ! empty($rs['D'] ?? ''))
                   {
                     //--- check item cache
-                    $Qty = str_replace(',', '', $rs['D']);
+                    $Qty = str_replace(',', '', $rs['D'] ?? '');
                     $Qty = is_numeric($Qty) ? $Qty : 1;
 
-                    $Price = str_replace(',', '', $rs['B']);
+                    $Price = str_replace(',', '', $rs['B'] ?? '');
                     $Price = is_numeric($Price) ? $Price : 0;
 
                     if($Qty > 0)
                     {
-                      $item_code = trim($rs['A']);
+                      $item_code = trim($rs['A'] ?? '');
 
                       //--- มี cache อยู่หรือไม่
                       //--- ถ้าไม่มี ไปดึงรายการมาสร้างใหม่
@@ -647,7 +620,7 @@ class Consign_so extends PS_Controller
                             'cost' => $item->cost,
                             'price' => $Price > 0 ? $Price : $item->price,
                             'qty' => $Qty,
-                            'discount1' => empty(trim($rs['C'])) ? $gp : $rs['C'],
+                            'discount1' => empty(trim($rs['C'] ?? '')) ? $gp : $rs['C'] ?? '',
                             'is_count' => $item->count_stock
                           );
 

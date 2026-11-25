@@ -479,8 +479,8 @@ class Pick_list extends PS_Controller
   {
     $ds = array();
     $sc = TRUE;
-    $zone_code = trim($this->input->get('zone_code'));
-    $warehouse_code = trim($this->input->get('warehouse_code'));
+    $zone_code = trim($this->input->get('zone_code') ?? '');
+    $warehouse_code = trim($this->input->get('warehouse_code') ?? '');
 
     if($zone_code)
     {

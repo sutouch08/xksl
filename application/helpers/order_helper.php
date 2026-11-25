@@ -2,6 +2,7 @@
 function paymentLabel($order_code, $isExists, $isPaid)
 {
 	$sc = "";
+	
 	if( $isExists === TRUE )
 	{
     if( $isPaid == 1 )
@@ -22,20 +23,20 @@ function paymentLabel($order_code, $isExists, $isPaid)
 }
 
 
-
 function paymentExists($order_code)
 {
-  $CI =& get_instance();
-  $CI->load->model('orders/order_payment_model');
-  return $CI->order_payment_model->is_exists($order_code);
+  $ci =& get_instance();
+  $ci->load->model('orders/order_payment_model');
+  return $ci->order_payment_model->is_exists($order_code);
 }
 
 
 function payment_image_url($order_code)
 {
-  $CI =& get_instance();
+  $ci =& get_instance();
 	$link	= base_url().'images/payments/'.$order_code.'.jpg';
-  $file = $CI->config->item('image_file_path').'payments/'.$order_code.'.jpg';
+  $file = $ci->config->item('image_file_path').'payments/'.$order_code.'.jpg';
+
 	if( ! file_exists($file) )
 	{
 		$link = FALSE;
@@ -50,15 +51,15 @@ function getSpace($amount, $length)
 	$sc = '';
 	$i	= strlen($amount);
 	$m	= $length - $i;
+
 	while($m > 0 )
 	{
 		$sc .= '&nbsp;';
 		$m--;
 	}
+
 	return $sc.$amount;
 }
-
-
 
 
 function get_summary($order, $details, $banks)
@@ -91,18 +92,15 @@ function get_summary($order, $details, $banks)
 		$orderTxt .= '<br/>';
 	}
 
-
-
 	$payAmount = $orderAmount - ($discount + $order->bDiscAmount);
 	$orderTxt .= 'ยอดชำระ' . getSpace(number( $payAmount, 2), 29).'<br/>';
-
-
 	$orderTxt .= '====================<br/><br/>';
 
 	if(!empty($banks))
 	{
 		$orderTxt .= 'สามารถชำระได้ที่ <br/>';
 		$orderTxt .= '<br/>';
+
 		foreach($banks as $rs)
 		{
 			$orderTxt .= '- '.$rs->bank_name.'<br/>';
@@ -123,8 +121,9 @@ function get_summary($order, $details, $banks)
 function select_order_role($role = '')
 {
 	$sc = '';
-	$CI =& get_instance();
-	$rs = $CI->db->query("SELECT * FROM order_role");
+	$ci =& get_instance();
+	$rs = $ci->db->query("SELECT * FROM order_role");
+
 	if($rs->num_rows() > 0)
 	{
 		foreach($rs->result() as $rd)
@@ -151,8 +150,5 @@ function role_name($role)
 		'U'	=> 'อภินันท์',
 	);
 
-	return isset($ds[$role]) ? $ds[$role] : NULL;
+	return isset($ds[$role ?? '']) ? $ds[$role] : NULL;
 }
-
-
- ?>

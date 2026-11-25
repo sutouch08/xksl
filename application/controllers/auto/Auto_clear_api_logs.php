@@ -15,19 +15,13 @@ class Auto_clear_api_logs extends CI_Controller
   {
 		$days = 60;
     $date = date('Y-m-d 00:00:00', strtotime("-{$days} days"));
-
-    //--- clear WRX logs
-    //$this->clear_wrx_logs($date);
-
+    
     //-- clear IX Logs
     $this->clear_ix_logs($date);
 
     //-- clear POS logs
     $this->clear_pos_logs($date);
-
-    //-- clear SAP logs
-    //$this->clear_sap_logs($date);
-
+    
     //--- clear LNW SHOP logs
     $this->clear_lnw_shop_logs($date);
   }
@@ -58,5 +52,4 @@ class Auto_clear_api_logs extends CI_Controller
     return $this->wms->where('date_upd <', $date)->delete('lnw_shop_api_logs');
   }
 
-} //--- end class
- ?>
+}

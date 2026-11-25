@@ -1,5 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Warehouse extends PS_Controller
 {
   public $menu_code = 'DBWRHS';
@@ -29,18 +32,9 @@ class Warehouse extends PS_Controller
       'auz' => get_filter('auz', 'wh_auz', 'all'),
       'is_pos' => get_filter('is_pos', 'wh_is_pos', 'all')
     );
-
-		//--- แสดงผลกี่รายการต่อหน้า
+		
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
 		$rows = $this->warehouse_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init = pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 		$list = $this->warehouse_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
 
     if(!empty($list))
@@ -52,11 +46,10 @@ class Warehouse extends PS_Controller
     }
 
     $filter['list'] = $list;
-
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 		$this->pagination->initialize($init);
     $this->load->view('masters/warehouse/warehouse_list', $filter);
   }
-
 
 
   public function edit($code)
@@ -74,16 +67,13 @@ class Warehouse extends PS_Controller
   }
 
 
-
   public function update()
   {
     if($this->pm->can_edit)
     {
       if($this->input->post('code'))
       {
-        $code = $this->input->post('code');
-
-        $active = $this->input->post('active');
+        $code = $this->input->post('code');        
 
         $arr = array(
           'role' => $this->input->post('role'),
@@ -161,8 +151,7 @@ class Warehouse extends PS_Controller
 
   public function syncData()
   {
-    $last_sync = $this->warehouse_model->get_last_sync_date();
-    //$last_sync = date('Y-m-d H:i:s', strtotime('2019-01-01 00:00:00'));
+    $last_sync = $this->warehouse_model->get_last_sync_date();    
     $newData = $this->warehouse_model->get_new_data($last_sync);
 
     if(!empty($newData))
@@ -264,39 +253,39 @@ class Warehouse extends PS_Controller
 
     $list = $this->warehouse_model->get_list($filter);
 
-    //--- load excel library
-    $this->load->library('excel');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();
 
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Zone master data');
+    $excel->setActiveSheetIndex(0);
+    $sheet->setTitle('Zone master data');
 
     //--- set Table header
 
 
-    $this->excel->getActiveSheet()->setCellValue('A1', 'No.');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'Code');
-    $this->excel->getActiveSheet()->setCellValue('C1', 'Description');
-    $this->excel->getActiveSheet()->setCellValue('D1', 'Role');
-    $this->excel->getActiveSheet()->setCellValue('E1', 'Bin Location');
-    $this->excel->getActiveSheet()->setCellValue('F1', 'Sell');
-    $this->excel->getActiveSheet()->setCellValue('G1', 'Pick');
-    $this->excel->getActiveSheet()->setCellValue('H1', 'Can be negative');
-    $this->excel->getActiveSheet()->setCellValue('I1', 'Active');
-    $this->excel->getActiveSheet()->setCellValue('J1', 'Is Consignment');
-    $this->excel->getActiveSheet()->setCellValue('K1', 'Limit Amount');
+    $sheet->setCellValue('A1', 'No.');
+    $sheet->setCellValue('B1', 'Code');
+    $sheet->setCellValue('C1', 'Description');
+    $sheet->setCellValue('D1', 'Role');
+    $sheet->setCellValue('E1', 'Bin Location');
+    $sheet->setCellValue('F1', 'Sell');
+    $sheet->setCellValue('G1', 'Pick');
+    $sheet->setCellValue('H1', 'Can be negative');
+    $sheet->setCellValue('I1', 'Active');
+    $sheet->setCellValue('J1', 'Is Consignment');
+    $sheet->setCellValue('K1', 'Limit Amount');
 
 
     //---- กำหนดความกว้างของคอลัมภ์
-    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(40);
-    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(20);
-    $this->excel->getActiveSheet()->getColumnDimension('K')->setWidth(20);
+    $sheet->getColumnDimension('B')->setWidth(20);
+    $sheet->getColumnDimension('C')->setWidth(40);
+    $sheet->getColumnDimension('D')->setWidth(20);
+    $sheet->getColumnDimension('E')->setWidth(20);
+    $sheet->getColumnDimension('F')->setWidth(20);
+    $sheet->getColumnDimension('G')->setWidth(20);
+    $sheet->getColumnDimension('H')->setWidth(20);
+    $sheet->getColumnDimension('I')->setWidth(20);
+    $sheet->getColumnDimension('J')->setWidth(20);
+    $sheet->getColumnDimension('K')->setWidth(20);
 
 
     $row = 2;
@@ -308,17 +297,17 @@ class Warehouse extends PS_Controller
 
       foreach($list as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->code);
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->name);
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->role_name);
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $this->warehouse_model->count_zone($rs->code));
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, ($rs->sell ? 'Y' : 'N'));
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, ($rs->prepare ? 'Y' : 'N'));
-        $this->excel->getActiveSheet()->setCellValue('H'.$row, ($rs->auz ? 'Y' : 'N'));
-        $this->excel->getActiveSheet()->setCellValue('I'.$row, ($rs->active ? 'Y' : 'N'));
-        $this->excel->getActiveSheet()->setCellValue('J'.$row, ($rs->is_consignment ? 'Y' : 'N'));
-        $this->excel->getActiveSheet()->setCellValue('K'.$row, $rs->limit_amount);
+        $sheet->setCellValue('A'.$row, $no);
+        $sheet->setCellValue('B'.$row, $rs->code);
+        $sheet->setCellValue('C'.$row, $rs->name);
+        $sheet->setCellValue('D'.$row, $rs->role_name);
+        $sheet->setCellValue('E'.$row, $this->warehouse_model->count_zone($rs->code));
+        $sheet->setCellValue('F'.$row, ($rs->sell ? 'Y' : 'N'));
+        $sheet->setCellValue('G'.$row, ($rs->prepare ? 'Y' : 'N'));
+        $sheet->setCellValue('H'.$row, ($rs->auz ? 'Y' : 'N'));
+        $sheet->setCellValue('I'.$row, ($rs->active ? 'Y' : 'N'));
+        $sheet->setCellValue('J'.$row, ($rs->is_consignment ? 'Y' : 'N'));
+        $sheet->setCellValue('K'.$row, $rs->limit_amount);
         $no++;
         $row++;
       }
@@ -327,7 +316,7 @@ class Warehouse extends PS_Controller
       $file_name = "Warehouse Master Data.xlsx";
       header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
       header('Content-Disposition: attachment;filename="'.$file_name.'"');
-      $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+      $writer = new Xlsx($excel);
       $writer->save('php://output');
     }
   }
@@ -339,6 +328,4 @@ class Warehouse extends PS_Controller
     clear_filter($filter);
   }
 
-} //--- end class
-
- ?>
+} 

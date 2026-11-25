@@ -1,14 +1,13 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Return_order extends PS_Controller
 {
   public $menu_code = 'ICRTOR';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'RETURN';
-	public $title = 'คืนสินค้า(ลดหนี้ขาย)';
-  public $filter;
-  public $error;
+	public $title = 'คืนสินค้า(ลดหนี้ขาย)';  
   public $segment = 4;
   public $required_remark = 1;
 
@@ -70,11 +69,8 @@ class Return_order extends PS_Controller
 	{
     ini_set('max_execution_time', 1200);
     ini_set('memory_limit','1000M');
-
-    $this->load->library('excel');
-
-    $sc = TRUE;
-    $import = 0;
+    
+    $sc = TRUE;    
     $uid = genUid();
     $Ymd = date('Ymd');
     $file = isset( $_FILES['uploadFile'] ) ? $_FILES['uploadFile'] : FALSE;
@@ -101,9 +97,9 @@ class Return_order extends PS_Controller
       //---- checking data
       $info = $this->upload->data();
       /// read file
-      $excel = PHPExcel_IOFactory::load($info['full_path']);
+      $excel = IOFactory::load($info['full_path']);
       //get only the Cell Collection
-      $collection	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+      $collection	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
       $i = 1;
       $count = count($collection);
@@ -753,7 +749,7 @@ class Return_order extends PS_Controller
 
     $code = $this->input->post('code');
 
-    $remark = trim($this->input->post('accept_remark'));
+    $remark = trim($this->input->post('accept_remark') ?? '');
 
     $doc = $this->return_order_model->get($code);
 
@@ -984,7 +980,7 @@ class Return_order extends PS_Controller
           'user' => $this->_user->uname,
           'date_add' => $date_add,
           'shipped_date' => $shipped_date,
-          'remark' => get_null(trim($data->remark)),
+          'remark' => get_null(trim($data->remark ?? '')),
           'must_accept' => $must_accept
         );
 
@@ -1138,7 +1134,7 @@ class Return_order extends PS_Controller
           'customer_code' => $data->customer_code,
           'warehouse_code' => $zone->warehouse_code,
           'zone_code' => $zone->code,
-          'remark' => get_null(trim($data->remark)),
+          'remark' => get_null(trim($data->remark ?? '')),
           'must_accept' => $must_accept,
           'update_user' => $this->_user->uname
         );
@@ -1254,7 +1250,7 @@ class Return_order extends PS_Controller
   //--- auto complete
   public function get_sap_invoice_code($customer_code = NULL)
   {
-    $txt = trim($_REQUEST['term']);
+    $txt = trim($_REQUEST['term'] ?? '');
 		$sc = array();
 
 		$this->ms
@@ -1326,7 +1322,7 @@ class Return_order extends PS_Controller
   public function cancle_return($code)
   {
     $sc = TRUE;
-    $reason = trim($this->input->post('reason'));
+    $reason = trim($this->input->post('reason') ?? '');
     $force_cancel = $this->input->post('force_cancel') == 1 ? TRUE : FALSE;
 
     if($this->pm->can_delete)
@@ -1482,7 +1478,7 @@ class Return_order extends PS_Controller
   {
     if($this->input->post('barcode'))
     {
-      $barcode = trim($this->input->post('barcode'));
+      $barcode = trim($this->input->post('barcode') ?? '');
       $item = $this->products_model->get_product_by_barcode($barcode);
       if(!empty($item))
       {
@@ -1503,7 +1499,7 @@ class Return_order extends PS_Controller
     if(! $this->export->export_return($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = $this->export->error;
     }
 
     return $sc;
@@ -1564,5 +1560,4 @@ class Return_order extends PS_Controller
     );
     clear_filter($filter);
   }
-} //--- end class
-?>
+}

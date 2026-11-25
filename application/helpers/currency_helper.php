@@ -1,11 +1,11 @@
 <?php
 
-function select_currency($code = NULL)
+function select_currency($code = '')
 {
   $sc = '';
-  $CI =& get_instance();
-  $CI->load->model('tool_model');
-  $options = $CI->tool_model->get_currency();
+  $ci =& get_instance();
+  $ci->load->model('tool_model');
+  $options = $ci->tool_model->get_currency();
 
   if(!empty($options))
   {
@@ -13,7 +13,7 @@ function select_currency($code = NULL)
 		
     foreach($options as $rs)
     {
-      if($code === NULL)
+      if(empty($code))
       {
         $sc .= '<option value="'.$rs->code.'" '.is_selected($df, $rs->code).'>'.$rs->code.'</option>';
       }
@@ -27,4 +27,3 @@ function select_currency($code = NULL)
   return $sc;
 }
 
-?>

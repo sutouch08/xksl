@@ -7,8 +7,7 @@ class Pack extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'CHECK';
 	public $title = 'ตรวจสอบ QC';
-  public $filter;
-  public $error;
+  
   public function __construct()
   {
     parent::__construct();
@@ -51,7 +50,7 @@ class Pack extends PS_Controller
 	public function delete_row()
 	{
 		$sc = TRUE;
-		$id = trim($this->input->post('id'));
+		$id = $this->input->post('id');
 		if(!empty($id))
 		{
 			$rs = $this->pack_model->delete($id);

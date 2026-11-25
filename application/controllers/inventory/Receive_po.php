@@ -1,14 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Receive_po extends PS_Controller
 {
   public $menu_code = 'ICPURC';
   public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'RECEIVE';
-  public $title = 'รับสินค้าจากการซื้อ';
-  public $filter;
-  public $error;
+  public $title = 'รับสินค้าจากการซื้อ';  
   public $required_remark = 0;
   public $is_mobile = FALSE;
 
@@ -446,7 +445,7 @@ class Receive_po extends PS_Controller
               {
                 $sc = FALSE;
                 $ex = 0;
-                $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . trim($this->export->error) . '<br/>';
+                $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . $this->export->error . '<br/>';
               }
             }
           }
@@ -603,7 +602,7 @@ class Receive_po extends PS_Controller
             {
               $sc = FALSE;
               $ex = 0;
-              $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . trim($this->export->error);
+              $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . $this->export->error;
             }
           }
         }
@@ -635,8 +634,7 @@ class Receive_po extends PS_Controller
 
 
   public function import_data()
-  {
-    $this->load->library('excel');
+  {    
     ini_set('max_execution_time', 1200);
     $sc = TRUE;    
     $file = isset($_FILES['uploadFile']) ? $_FILES['uploadFile'] : FALSE;
@@ -660,12 +658,12 @@ class Receive_po extends PS_Controller
     {
       $info = $this->upload->data();
       /// read file
-      $excel = PHPExcel_IOFactory::load($info['full_path']);
+      $excel = IOFactory::load($info['full_path']);
       //get only the Cell Collection
-      $cs  = $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+      $cs  = $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
       $i = 1;
-      $count = count($cs);
+      $count = count($cs ?? []);
       $limit = intval(getConfig('IMPORT_ROWS_LIMIT')) + 1;      
       $ro = getConfig('RECEIVE_OVER_PO');
       $rate = ($ro * 0.01);
@@ -888,7 +886,7 @@ class Receive_po extends PS_Controller
         $date_add = db_date($ds->doc_date, TRUE);
         $due_date = empty($ds->due_date) ? $date_add : db_date($ds->due_date, FALSE);
         $posting_date = empty($ds->posting_date) ? NULL : db_date($ds->posting_date, TRUE);
-        $remark = get_null(trim($ds->remark));
+        $remark = get_null($ds->remark);
 
         if ($sc === TRUE)
         {
@@ -1053,7 +1051,7 @@ class Receive_po extends PS_Controller
             {
               $sc = FALSE;
               $ex = 0;
-              $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . trim($this->export->error) . '<br/>';
+              $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . $this->export->error . '<br/>';
             }
           }
         }
@@ -1246,7 +1244,7 @@ class Receive_po extends PS_Controller
           {
             $sc = FALSE;
             $ex = 0;
-            $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . trim($this->export->error) . '<br/>';
+            $this->error .= "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ <br/> " . $this->export->error . '<br/>';
           }
         }
       }
@@ -1269,7 +1267,7 @@ class Receive_po extends PS_Controller
   public function pull_back()
   {
     $sc = TRUE;
-    $code = trim($this->input->post('code'));
+    $code = $this->input->post('code');
 
     if ($this->_SuperAdmin)
     {
@@ -1422,7 +1420,7 @@ class Receive_po extends PS_Controller
       $products = [];
       $rows = [];
       $arr = explode('-', $doc->code);
-      $refCode = count($arr) > 1 ? intval($arr[1]) : $doc->code;
+      $refCode = count($arr ?? []) > 1 ? intval($arr[1]) : $doc->code;
 
       foreach ($details as $rs)
       {
@@ -1589,7 +1587,7 @@ class Receive_po extends PS_Controller
     if (! $this->export->export_receive($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = $this->export->error;
     }
 
     return $sc;
@@ -1684,7 +1682,7 @@ class Receive_po extends PS_Controller
               {
                 $products = [];
                 $arr = explode('-', $code);
-                $refCode = count($arr) > 1 ? intval($arr[1]) : $code;
+                $refCode = count($arr ?? []) > 1 ? intval($arr[1]) : $code;
 
                 foreach ($details as $rs)
                 {
@@ -1723,7 +1721,7 @@ class Receive_po extends PS_Controller
                   if (! $this->lnw_shop_api->cancelStockBatch($products, $code, 'GR'))
                   {
                     $sc = FALSE;
-                    $this->error = "ยกเลิกสำเร็จ แต่ส่งข้อมูลเข้า LNW SHOP ไม่สำเร็จ <br/> " . trim($this->lnw_shop_api->error) . '<br/>';
+                    $this->error = "ยกเลิกสำเร็จ แต่ส่งข้อมูลเข้า LNW SHOP ไม่สำเร็จ <br/> " . ($this->lnw_shop_api->error) . '<br/>';
                   }
 
                   if ($sc === TRUE)
@@ -1966,7 +1964,7 @@ class Receive_po extends PS_Controller
     $date_add = db_date($this->input->post('date_add'), TRUE);
     $due_date = empty($this->input->post('due_date')) ? $date_add : db_date($this->input->post('due_date'), FALSE);
     $posting_date = empty($this->input->post('posting_date')) ? $due_date : db_date($this->input->post('posting_date', TRUE));
-    $remark = trim($this->input->post('remark'));
+    $remark = ($this->input->post('remark'));
 
     $code = $this->get_new_code($date_add);
 
@@ -2015,7 +2013,7 @@ class Receive_po extends PS_Controller
     $date_add = db_date($this->input->post('date_add'), TRUE);
     $due_date = empty($this->input->post('due_date')) ? $date_add : db_date($this->input->post('due_date'), FALSE);
     $posting_date = empty($this->input->post('posting_date')) ? $due_date : db_date($this->input->post('posting_date', TRUE));
-    $remark = get_null(trim($this->input->post('remark')));
+    $remark = get_null($this->input->post('remark'));
 
     if (!empty($code))
     {

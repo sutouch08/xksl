@@ -1,5 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Sales_consignment_report extends PS_Controller
 {
   public $menu_code = 'RSOCMD';
@@ -216,40 +221,38 @@ class Sales_consignment_report extends PS_Controller
 
     $result = $this->sales_consignment_report_model->get_data($filter);
 
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Sales Consignment Report (WD)');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();    
+    $sheet->setTitle('Sales Consignment Report (WD)');
 
     //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', $report_title);
-    $this->excel->getActiveSheet()->setCellValue('A2', $dateRange);
-    $this->excel->getActiveSheet()->setCellValue('A3', 'ลูกค้า : '.$cusList);
-    $this->excel->getActiveSheet()->setCellValue('A4', 'คลัง : '.$whList);
-    $this->excel->getActiveSheet()->setCellValue('A5', 'โซน : '.$zoneList);
-    $this->excel->getActiveSheet()->setCellValue('A4', 'สินค้า : '.$productList);
+    $sheet->setCellValue('A1', $report_title);
+    $sheet->setCellValue('A2', $dateRange);
+    $sheet->setCellValue('A3', 'ลูกค้า : '.$cusList);
+    $sheet->setCellValue('A4', 'คลัง : '.$whList);
+    $sheet->setCellValue('A5', 'โซน : '.$zoneList);
+    $sheet->setCellValue('A6', 'สินค้า : '.$productList);
 
     $row = 6;
     //--- set Table header
-    $this->excel->getActiveSheet()->setCellValue("A{$row}", "วันที่");
-    $this->excel->getActiveSheet()->setCellValue("B{$row}", "เลขที่");
-    $this->excel->getActiveSheet()->setCellValue("C{$row}", "รหัส");
-    $this->excel->getActiveSheet()->setCellValue("D{$row}", "สินค้า");
-    $this->excel->getActiveSheet()->setCellValue("E{$row}", "ทุน");
-    $this->excel->getActiveSheet()->setCellValue("F{$row}", "ราคา");
-    $this->excel->getActiveSheet()->setCellValue("G{$row}", "ขาย");
-    $this->excel->getActiveSheet()->setCellValue("H{$row}", "จำนวน");
-    $this->excel->getActiveSheet()->setCellValue("I{$row}", "ส่วนลด");
-    $this->excel->getActiveSheet()->setCellValue("J{$row}", "มูลค่าส่วนลด");
-    $this->excel->getActiveSheet()->setCellValue("K{$row}", "มูลค่ารวม");
-    $this->excel->getActiveSheet()->setCellValue("L{$row}", "ทุนรวม");
-    $this->excel->getActiveSheet()->setCellValue("M{$row}", "รหัสลูกค้า");
-    $this->excel->getActiveSheet()->setCellValue("N{$row}", "ชื่อลูกค้า");
-    $this->excel->getActiveSheet()->setCellValue("O{$row}", "รหัสคลัง");
-    $this->excel->getActiveSheet()->setCellValue("P{$row}", "ชื่อคลัง");
-    $this->excel->getActiveSheet()->setCellValue("Q{$row}", "รหัสโซน");
-    $this->excel->getActiveSheet()->setCellValue("R{$row}", "ชื่อโซน");
+    $sheet->setCellValue("A{$row}", "วันที่");
+    $sheet->setCellValue("B{$row}", "เลขที่");
+    $sheet->setCellValue("C{$row}", "รหัส");
+    $sheet->setCellValue("D{$row}", "สินค้า");
+    $sheet->setCellValue("E{$row}", "ทุน");
+    $sheet->setCellValue("F{$row}", "ราคา");
+    $sheet->setCellValue("G{$row}", "ขาย");
+    $sheet->setCellValue("H{$row}", "จำนวน");
+    $sheet->setCellValue("I{$row}", "ส่วนลด");
+    $sheet->setCellValue("J{$row}", "มูลค่าส่วนลด");
+    $sheet->setCellValue("K{$row}", "มูลค่ารวม");
+    $sheet->setCellValue("L{$row}", "ทุนรวม");
+    $sheet->setCellValue("M{$row}", "รหัสลูกค้า");
+    $sheet->setCellValue("N{$row}", "ชื่อลูกค้า");
+    $sheet->setCellValue("O{$row}", "รหัสคลัง");
+    $sheet->setCellValue("P{$row}", "ชื่อคลัง");
+    $sheet->setCellValue("Q{$row}", "รหัสโซน");
+    $sheet->setCellValue("R{$row}", "ชื่อโซน");
 
     $row++;
 
@@ -258,47 +261,35 @@ class Sales_consignment_report extends PS_Controller
       // print_r($result);
       foreach($result as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue("A{$row}", thai_date($rs->date_add, FALSE, '/'));
-        $this->excel->getActiveSheet()->setCellValue("B{$row}", $rs->reference);
-        $this->excel->getActiveSheet()->setCellValue("C{$row}", $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue("D{$row}", $rs->product_name);
-        $this->excel->getActiveSheet()->setCellValue("E{$row}", $rs->cost);
-        $this->excel->getActiveSheet()->setCellValue("F{$row}", $rs->price);
-        $this->excel->getActiveSheet()->setCellValue("G{$row}", $rs->sell);
-        $this->excel->getActiveSheet()->setCellValue("H{$row}", $rs->qty);
-        $this->excel->getActiveSheet()->setCellValueExplicit("I{$row}", $rs->discount_label, PHPExcel_Cell_DataType::TYPE_STRING);
-        $this->excel->getActiveSheet()->setCellValue("J{$row}", $rs->discount_amount);
-        $this->excel->getActiveSheet()->setCellValue("K{$row}", $rs->total_amount);
-        $this->excel->getActiveSheet()->setCellValue("L{$row}", $rs->total_cost);
-        $this->excel->getActiveSheet()->setCellValue("M{$row}", $rs->customer_code);
-        $this->excel->getActiveSheet()->setCellValue("N{$row}", $rs->customer_name);
-        $this->excel->getActiveSheet()->setCellValue("O{$row}", $rs->warehouse_code);
-        $this->excel->getActiveSheet()->setCellValue("P{$row}", $rs->warehouse_name);
-        $this->excel->getActiveSheet()->setCellValue("Q{$row}", $rs->zone_code);
-        $this->excel->getActiveSheet()->setCellValue("R{$row}", $rs->zone_name);
+        $sheet->setCellValue("A{$row}", thai_date($rs->date_add, FALSE, '/'));
+        $sheet->setCellValue("B{$row}", $rs->reference);
+        $sheet->setCellValue("C{$row}", $rs->product_code);
+        $sheet->setCellValue("D{$row}", $rs->product_name);
+        $sheet->setCellValue("E{$row}", $rs->cost);
+        $sheet->setCellValue("F{$row}", $rs->price);
+        $sheet->setCellValue("G{$row}", $rs->sell);
+        $sheet->setCellValue("H{$row}", $rs->qty);
+        $sheet->setCellValueExplicit("I{$row}", $rs->discount_label, DataType::TYPE_STRING);
+        $sheet->setCellValue("J{$row}", $rs->discount_amount);
+        $sheet->setCellValue("K{$row}", $rs->total_amount);
+        $sheet->setCellValue("L{$row}", $rs->total_cost);
+        $sheet->setCellValue("M{$row}", $rs->customer_code);
+        $sheet->setCellValue("N{$row}", $rs->customer_name);
+        $sheet->setCellValue("O{$row}", $rs->warehouse_code);
+        $sheet->setCellValue("P{$row}", $rs->warehouse_name);
+        $sheet->setCellValue("Q{$row}", $rs->zone_code);
+        $sheet->setCellValue("R{$row}", $rs->zone_name);
         $row++;
       }
 
-      $this->excel->getActiveSheet()->getStyle("E7:L{$row}")->getAlignment()->setHorizontal('right');
+      $sheet->getStyle("E7:L{$row}")->getAlignment()->setHorizontal('right');
     }
 
     setToken($token);
     $file_name = "Report Sales Consignment.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
-
   }
-
-
-} //--- end class
-
-
-
-
-
-
-
-
- ?>
+}

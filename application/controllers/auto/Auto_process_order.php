@@ -62,7 +62,7 @@ class Auto_process_order extends CI_Controller
   public function process_delivery()
   {
     $sc = TRUE;
-    $code = trim($this->input->post('order_code'));
+    $code = trim($this->input->post('order_code') ?? '');
     $order =  $this->orders_model->get($code);
 
     if( ! empty($order))
@@ -421,7 +421,7 @@ class Auto_process_order extends CI_Controller
 		if(! $this->export->export_order($code))
 		{
 			$sc = FALSE;
-			$this->error = trim($this->export->error);
+			$this->error = ($this->export->error);
 		}
 
 		return $sc;
@@ -435,7 +435,7 @@ class Auto_process_order extends CI_Controller
 		if(! $this->export->export_transfer_order($code))
 		{
 			$sc = FALSE;
-			$this->error = trim($this->export->error);
+			$this->error = ($this->export->error);
 		}
 
 		return $sc;
@@ -449,7 +449,7 @@ class Auto_process_order extends CI_Controller
 		if(! $this->export->export_transfer_draft($code))
 		{
 			$sc = FALSE;
-			$this->error = trim($this->export->error);
+			$this->error = ($this->export->error);
 		}
 
 		return $sc;
@@ -463,7 +463,7 @@ class Auto_process_order extends CI_Controller
 		if(! $this->export->export_transform($code))
 		{
 			$sc = FALSE;
-			$this->error = trim($this->export->error);
+			$this->error = ($this->export->error);
 		}
 
 		return $sc;
@@ -524,6 +524,4 @@ class Auto_process_order extends CI_Controller
 
 		return $sc;
 	}
-
-} //--- end class
- ?>
+}

@@ -5,7 +5,7 @@ class Maintenance extends CI_Controller
   {
     parent::__construct();
     //--- get permission for user
-    $this->pm = get_permission('SCSYSC', get_cookie('uid'), get_cookie('id_profile'));
+    $this->pm = get_permission('SCSYSC');
     $this->load->model('setting/config_model');
   }
 
@@ -35,9 +35,4 @@ class Maintenance extends CI_Controller
     $rs = $this->config_model->get('CLOSE_SYSTEM');
     echo $rs == 1 ? 'close' : 'open';
   }
-
-
 }
-
-
- ?>

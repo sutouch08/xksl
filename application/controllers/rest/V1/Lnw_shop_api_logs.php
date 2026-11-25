@@ -7,8 +7,7 @@ class Lnw_shop_api_logs extends PS_Controller
 	public $menu_code = 'LNWAPILOG';
 	public $menu_group_code = 'APILOG';
   public $menu_sub_group_code = '';
-  public $filter;
-	
+  	
   public function __construct()
   {
     parent::__construct();
@@ -74,5 +73,4 @@ class Lnw_shop_api_logs extends PS_Controller
 		return clear_filter($filter);
 	}
 
-} //--- end classs
-?>
+}

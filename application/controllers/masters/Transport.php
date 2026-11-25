@@ -26,21 +26,10 @@ class Transport extends PS_Controller{
 			'name' => get_filter('name', 'name', ''),
 			'sender' => get_filter('sender', 'sender', '')
 		);
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
-		$rows = $this->transport_model->count_rows($filter);
-
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-
+		
+		$perpage = get_rows();
+		$segment = 4;
+		$rows = $this->transport_model->count_rows($filter);		
 		$list = $this->transport_model->get_list($filter, $perpage, $this->uri->segment($segment));
 
 		if(!empty($list))
@@ -53,15 +42,11 @@ class Transport extends PS_Controller{
 			}
 		}
 
-
 		$filter['data'] = $list;
-
+		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$this->pagination->initialize($init);
     $this->load->view('masters/transport/transport_view', $filter);
   }
-
-
-
 
 
 	public function add_new()
@@ -170,7 +155,6 @@ class Transport extends PS_Controller{
 	}
 
 
-
 	public function delete($id)
 	{
 		if($this->pm->can_delete)
@@ -193,15 +177,9 @@ class Transport extends PS_Controller{
 	}
 
 
-
-
 	public function clear_filter()
 	{
 		$filter = array('name', 'sender');
 		clear_filter($filter);
 	}
-
-}//--- end class
-
-
- ?>
+}

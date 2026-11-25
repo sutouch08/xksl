@@ -6,8 +6,7 @@ class Qc extends PS_Controller
   public $menu_code = 'ICODQC';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'PICKPACK';
-	public $title = 'ตรวจสินค้า';
-  public $filter;
+	public $title = 'ตรวจสินค้า'; 
   public $segment;
 
   public function __construct()
@@ -51,12 +50,6 @@ class Qc extends PS_Controller
       $this->pagination->initialize($init);
       $this->load->view('inventory/qc/qc_list', $filter);
     }
-  }
-
-
-  public function test()
-  {
-
   }
 
 
@@ -229,7 +222,7 @@ class Qc extends PS_Controller
   {
     $sc = TRUE;
 
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
@@ -330,7 +323,7 @@ class Qc extends PS_Controller
   public function do_qc()
   {
     $sc = TRUE;
-    $ds = json_decode($this->input->post('data'));
+    $ds = json_decode($this->input->post('data') ?? '{}');
     $result = array();
 
     if( ! empty($ds))
@@ -475,11 +468,6 @@ class Qc extends PS_Controller
     {
       //--- check cancel request
       $is_cancel = $this->orders_model->is_cancel_request($order->code);
-
-      // if( ! $is_cancel && ! empty($order->reference) && ($order->channels_code == '0009'))
-      // {
-      //   $is_cancel = $this->is_cancel($order->reference, $order->channels_code);
-      // }
 
       if( ! $is_cancel)
       {

@@ -148,11 +148,11 @@ class User_pwd extends PS_Controller
   public function change_skey()
   {
     $sc = TRUE;
-    $uid = trim($this->input->post('uid'));
+    $uid = trim($this->input->post('uid') ?? '');
     $user = $this->user_model->get_user_by_uid($uid);
     if(!empty($user))
     {
-      $skey = trim($this->input->post('skey'));
+      $skey = trim($this->input->post('skey') ?? '');
       $skey = md5($skey);
       $is_exists = $this->user_model->is_skey_exists($skey, $uid);
       if($is_exists)

@@ -3,6 +3,7 @@ function thai_date($date, $time = FALSE, $sp = '-')
 {
   $sp = $sp === '' ? '-' : $sp;
   $format = $time === TRUE ? 'd'.$sp.'m'.$sp.'Y'.' H:i:s' : 'd'.$sp.'m'.$sp.'Y';
+
   if(empty($date))
   {
     $date = date('d-m-Y');
@@ -56,7 +57,7 @@ function today()
 }
 
 
-function db_date($date, $time = FALSE, $sp = '-')
+function db_date($date, $time = FALSE)
 {
   if(empty($date))
   {
@@ -77,10 +78,8 @@ function db_date($date, $time = FALSE, $sp = '-')
 
 
 
-function sap_date($date="", $time = FALSE)
-{
-  //$date = empty($date) ? date('Y-m-d H:i:s') : $date;
-
+function sap_date($date, $time = FALSE)
+{  
   if($time === TRUE)
   {
     $c_time = date('H:i:s', strtotime($date));
@@ -96,7 +95,7 @@ function sap_date($date="", $time = FALSE)
 
 function from_date($date = '')
 {
-  if($date === '')
+  if(empty($date))
   {
     return date('Y-m-d 00:00:00');
   }
@@ -110,7 +109,7 @@ function from_date($date = '')
 
 function to_date($date = '')
 {
-  if($date === '')
+  if(empty($date))
   {
     return date('Y-m-d 23:59:59');
   }
@@ -121,42 +120,25 @@ function to_date($date = '')
 }
 
 
-// function select_years($se = '')
-// {
-// 	$sc 		= '';
-// 	$length	= 5;
-// 	$startYear = getConfig('START_YEAR');
-// 	//$se 		= ($se == '') ? $startYear : $se;
-// 	$year = ($se - $length) < $startYear ? $startYear : $se - $length;
-// 	$lastYear = date('Y') + $length;
-// 	while( $year <= $lastYear )
-// 	{
-// 		$sc .= '<option value="'.$year.'" '.is_selected($year, $se).'>'.$year.'</option>';
-// 		$year++;
-// 	}
-//
-// 	return $sc;
-// }
-
-
-function select_years($se = '')
+function select_years($selected = '')
 {
-	$sc 		= '';
-	$length	= 5;
-	$startYear = getConfig('START_YEAR');
-  $y = ($se === '' OR $sc === NULL) ? $startYear : $se;
-	$year = ($y - $length) < $startYear ? $startYear : $y - $length;
-	$lastYear = date('Y') + $length;
-	while( $year <= $lastYear )
-	{
-    $is_select = ($year == $se) ? 'selected' : '';
-		$sc .= '<option value="'.$year.'" '.$is_select.'>'.$year.'</option>';
-		$year++;
-	}
+  $options = "";
+  $length  = 5;
+  $startYear = getConfig('START_YEAR');
+  $startYear = empty($startYear) ? intval(date('Y')) - $length : intval($startYear);
+  $y = $selected === ''  ? $startYear : intval($selected);
+  $year = ($y - $length) < $startYear ? $startYear : $y - $length;
+  $lastYear = date('Y') + $length;
 
-	return $sc;
+  while ($year <= $lastYear)
+  {
+    $is_select = ($year == $selected) ? 'selected' : '';
+    $options .= '<option value="' . $year . '" ' . $is_select . '>' . $year . '</option>';
+    $year++;
+  }
+
+  return $options;
 }
-
 
 
 function selectHour($se = '')
@@ -169,8 +151,6 @@ function selectHour($se = '')
 	}
 	return $sc;
 }
-
-
 
 
 function selectMin($se = '' )
@@ -247,4 +227,3 @@ function is_valid_date($date)
 
   return TRUE;
 }
- ?>

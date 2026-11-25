@@ -1,13 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class Stock_balance_zone extends PS_Controller
 {
   public $menu_code = 'RICSBZ';
 	public $menu_group_code = 'RE';
   public $menu_sub_group_code = 'REINVT';
 	public $title = 'รายงานสินค้าคงเหลือ แยกตามโซน (SAP)';
-  public $filter;
-  public $error;
+  
   public function __construct()
   {
     parent::__construct();
@@ -123,22 +125,19 @@ class Stock_balance_zone extends PS_Controller
     ini_set('memory_limit','512M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
     ini_set('sqlsrv.ClientBufferMaxKBSize','524288'); // Setting to 512M
     ini_set('pdo_sqlsrv.client_buffer_max_kb_size','524288'); // Setting to 512M - for pdo_sqlsrv
-
-    $sc = TRUE;
+   
     $allProduct = $this->input->post('allProduct');
     $pdFrom = $this->input->post('pdFrom');
     $pdTo = $this->input->post('pdTo');
-
     $allWhouse = $this->input->post('allWhouse');
     $warehouse = $this->input->post('warehouse');
-
     $allZone = $this->input->post('allZone');
     $zoneCode = $this->input->post('zoneCode');
     $zoneName = $this->input->post('zoneName');
-
     $token = $this->input->post('token');
 
     $wh_list = '';
+
     if(!empty($warehouse) && empty($zoneCode))
     {
       $i = 1;
@@ -154,40 +153,36 @@ class Stock_balance_zone extends PS_Controller
     $whList = $allWhouse == 1 ? 'ทั้งหมด' : $wh_list;
     $zoneList = $allZone == 1 ? 'ทั้งหมด' : $zoneCode." - ".$zoneName;
     $productList  = $allProduct == 1 ? 'ทั้งหมด' : '('.$pdFrom.') - ('.$pdTo.')';
-
-    $bs = array();
-
+   
     $result = $this->stock_balance_report_model->get_stock_balance_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode);
 
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Stock Balance Report');
+   $excel = new Spreadsheet();
+   $sheet = $excel->getActiveSheet();
+   $sheet->setTitle('Stock Balance Report');
 
     //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', $report_title);
-    $this->excel->getActiveSheet()->mergeCells('A1:G1');
-    $this->excel->getActiveSheet()->setCellValue('A2', 'คลัง');
-    $this->excel->getActiveSheet()->setCellValue('B2', $whList);
-    $this->excel->getActiveSheet()->mergeCells('B2:G2');
-    $this->excel->getActiveSheet()->setCellValue('A3', 'โซน');
-    $this->excel->getActiveSheet()->setCellValue('B3', $zoneList);
-    $this->excel->getActiveSheet()->mergeCells('B3:G3');
-    $this->excel->getActiveSheet()->setCellValue('A4', 'สินค้า');
-    $this->excel->getActiveSheet()->setCellValue('B4', $productList);
-    $this->excel->getActiveSheet()->mergeCells('B4:G4');
+    $sheet->setCellValue('A1', $report_title);
+    $sheet->mergeCells('A1:G1');
+    $sheet->setCellValue('A2', 'คลัง');
+    $sheet->setCellValue('B2', $whList);
+    $sheet->mergeCells('B2:G2');
+    $sheet->setCellValue('A3', 'โซน');
+    $sheet->setCellValue('B3', $zoneList);
+    $sheet->mergeCells('B3:G3');
+    $sheet->setCellValue('A4', 'สินค้า');
+    $sheet->setCellValue('B4', $productList);
+    $sheet->mergeCells('B4:G4');
 
     //--- set Table header
-    $this->excel->getActiveSheet()->setCellValue('A5', 'ลำดับ');
-    $this->excel->getActiveSheet()->setCellValue('B5', 'รหัสคลัง');
-    $this->excel->getActiveSheet()->setCellValue('C5', 'รหัสโซน');
-    $this->excel->getActiveSheet()->setCellValue('D5', 'ชื่อโซน');
-    $this->excel->getActiveSheet()->setCellValue('E5', 'รหัสสินค้า');
-    $this->excel->getActiveSheet()->setCellValue('F5', 'ชื่อสินค้า');
-    $this->excel->getActiveSheet()->setCellValue('G5', 'ราคาขาย');
-    $this->excel->getActiveSheet()->setCellValue('H5', 'จำนวน');
-    $this->excel->getActiveSheet()->setCellValue('I5', 'มูลค่า');
+    $sheet->setCellValue('A5', 'ลำดับ');
+    $sheet->setCellValue('B5', 'รหัสคลัง');
+    $sheet->setCellValue('C5', 'รหัสโซน');
+    $sheet->setCellValue('D5', 'ชื่อโซน');
+    $sheet->setCellValue('E5', 'รหัสสินค้า');
+    $sheet->setCellValue('F5', 'ชื่อสินค้า');
+    $sheet->setCellValue('G5', 'ราคาขาย');
+    $sheet->setCellValue('H5', 'จำนวน');
+    $sheet->setCellValue('I5', 'มูลค่า');
 
     $row = 6;
     if(!empty($result))
@@ -196,34 +191,33 @@ class Stock_balance_zone extends PS_Controller
       $totalQty = 0;
       foreach($result as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->warehouse_code);
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->zone_code);
-        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->zone_name);
-        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->product_name);
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->price);
-        $this->excel->getActiveSheet()->setCellValue('H'.$row, $rs->qty);
-        $this->excel->getActiveSheet()->setCellValue('I'.$row, "=G{$row}*H{$row}");
+        $sheet->setCellValue('A'.$row, $no);
+        $sheet->setCellValue('B'.$row, $rs->warehouse_code);
+        $sheet->setCellValue('C'.$row, $rs->zone_code);
+        $sheet->setCellValue('D'.$row, $rs->zone_name);
+        $sheet->setCellValue('E'.$row, $rs->product_code);
+        $sheet->setCellValue('F'.$row, $rs->product_name);
+        $sheet->setCellValue('G'.$row, $rs->price);
+        $sheet->setCellValue('H'.$row, $rs->qty);
+        $sheet->setCellValue('I'.$row, "=G{$row}*H{$row}");
         $no++;
         $row++;
       }
 
       $ro = $row - 1;
-      $this->excel->getActiveSheet()->setCellValue('A'.$row, 'รวม');
-      $this->excel->getActiveSheet()->mergeCells('A'.$row.':G'.$row);
-      $this->excel->getActiveSheet()->setCellValue('H'.$row, "=SUM(H6:H{$ro})");
-      $this->excel->getActiveSheet()->setCellValue('I'.$row, "=SUM(I6:I{$ro})");
-      $this->excel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
+      $sheet->setCellValue('A'.$row, 'รวม');
+      $sheet->mergeCells('A'.$row.':G'.$row);
+      $sheet->setCellValue('H'.$row, "=SUM(H6:H{$ro})");
+      $sheet->setCellValue('I'.$row, "=SUM(I6:I{$ro})");
+      $sheet->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
     }
 
     setToken($token);
     $file_name = "Report Stock Zone.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
-
   }
 
 
@@ -246,47 +240,34 @@ class Stock_balance_zone extends PS_Controller
 
     $result = $this->stock_balance_report_model->get_stock_balance_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode);
 
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Report Stock Zone');
+    $excel = new Spreadsheet();
+    $sheet = $excel->getActiveSheet();
+    $sheet->setTitle('Report Stock Zone');
 
     //--- set Table header
-    $this->excel->getActiveSheet()->setCellValue('A1', 'barcode');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'item_code');
-    $this->excel->getActiveSheet()->setCellValue('C1', 'qty');
+    $sheet->setCellValue('A1', 'barcode');
+    $sheet->setCellValue('B1', 'item_code');
+    $sheet->setCellValue('C1', 'qty');
 
     $row = 2;
     if(!empty($result))
     {
       foreach($result as $rs)
       {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $this->products_model->get_barcode($rs->product_code));
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->qty);
+        $sheet->setCellValue('A'.$row, $this->products_model->get_barcode($rs->product_code));
+        $sheet->setCellValue('B'.$row, $rs->product_code);
+        $sheet->setCellValue('C'.$row, $rs->qty);
         $row++;
       }
 
-      $this->excel->getActiveSheet()->getStyle('A2:A'.($row -1))->getNumberFormat()->setFormatCode('0');
+      $sheet->getStyle('A2:A'.($row -1))->getNumberFormat()->setFormatCode('0');
     }
 
     setToken($token);
     $file_name = "Report Stock Zone.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer = new Xlsx($excel);
     $writer->save('php://output');
   }
-
-
-} //--- end class
-
-
-
-
-
-
-
-
- ?>
+}

@@ -1,13 +1,13 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Consign_tr extends PS_Controller
 {
   public $menu_code = 'SOCCTR';
 	public $menu_group_code = 'SO';
   public $menu_sub_group_code = 'ORDER';
-	public $title = 'ฝากขาย(โอนคลัง)';
-  public $filter;
+	public $title = 'ฝากขาย(โอนคลัง)';  
   public $role = 'N';
 
   public function __construct()
@@ -30,9 +30,7 @@ class Consign_tr extends PS_Controller
     $this->load->helper('product_images');
     $this->load->helper('discount');
     $this->load->helper('zone');
-    $this->load->helper('warehouse');
-
-    $this->filter = getConfig('STOCK_FILTER');
+    $this->load->helper('warehouse');    
   }
 
 
@@ -68,7 +66,6 @@ class Consign_tr extends PS_Controller
     );
 
     $state_list = array();
-
     $button = array();
 
     for($i =1; $i <= 9; $i++)
@@ -85,32 +82,24 @@ class Consign_tr extends PS_Controller
     $button['not_save'] = empty($filter['notSave']) ? '' : 'btn-info';
     $button['only_me'] = empty($filter['onlyMe']) ? '' : 'btn-info';
     $button['is_expire'] = empty($filter['isExpire']) ? '' : 'btn-info';
-
-
     $filter['state_list'] = empty($state_list) ? NULL : $state_list;
 
 		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
+		$perpage = get_rows();		
+		$segment = 4;
+		$rows = $this->orders_model->count_rows($filter, 'N');	
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+		$orders = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), 'N');
+    $ds = array();
 
-		$segment  = 4; //-- url segment
-		$rows     = $this->orders_model->count_rows($filter, 'N');
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), 'N');
-    $ds       = array();
     if(!empty($orders))
     {
       foreach($orders as $rs)
       {
         $rs->customer_name = $this->customers_model->get_name($rs->customer_code);
-        $rs->total_amount  = $this->orders_model->get_order_total_amount($rs->code);
-        $rs->state_name    = get_state_name($rs->state);
-        $rs->zone_name     = $this->zone_model->get_name($rs->zone_code);
+        $rs->total_amount = $this->orders_model->get_order_total_amount($rs->code);
+        $rs->state_name = get_state_name($rs->state);
+        $rs->zone_name = $this->zone_model->get_name($rs->zone_code);
         $ds[] = $rs;
       }
     }
@@ -122,15 +111,13 @@ class Consign_tr extends PS_Controller
     $this->load->view('order_consign/consign_list', $filter);
   }
 
-
-  //---- รายการรออนุมัติ
+  
   public function get_un_approve_list()
   {
     $role = 'N'; //--- ฝากขายเปิดใบกำกับ
     $rows = $this->orders_model->count_un_approve_rows($role);
     $limit = empty($this->input->get('limit')) ? 10 : intval($this->input->get('limit'));
     $list = $this->orders_model->get_un_approve_list($role, $limit);
-
     $result_rows = empty($list) ? 0 :count($list);
 
     $ds = array();
@@ -157,16 +144,15 @@ class Consign_tr extends PS_Controller
     echo json_encode($data);
   }
 
-  //---- รายการรออนุมัติ
+
   public function get_un_received_list()
   {
     $rows = $this->orders_model->count_un_receive_rows();
     $limit = empty($this->input->get('limit')) ? 10 : intval($this->input->get('limit'));
     $list = $this->orders_model->get_un_received_list($limit);
-
-    $result_rows = empty($list) ? 0 :count($list);
-
+    $result_rows = empty($list) ? 0 :count($list ?? []);
     $ds = array();
+
     if(!empty($list))
     {
       foreach($list as $rs)
@@ -200,21 +186,15 @@ class Consign_tr extends PS_Controller
   public function add()
   {
     $sc = TRUE;
-
     $this->load->model('masters/warehouse_model');
-
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
       $book_code = getConfig('BOOK_CODE_CONSIGN_TR');
-
       $date_add = db_date($data->date_add);
-
       $code = $this->get_new_code($date_add);
-
-      $role = 'N'; //--- ฝากขายเปิดใบกำกับ
-
+      $role = 'N';
       $zone = $this->zone_model->get($data->zone_code);
 
       if( ! empty($zone))
@@ -301,6 +281,7 @@ class Consign_tr extends PS_Controller
 
     $ds = array();
     $rs = $this->orders_model->get($code);
+
     if(!empty($rs))
     {
       $rs->customer_name = empty($rs->customer_name) ? $this->customers_model->get_name($rs->customer_code) : $rs->customer_name;
@@ -367,7 +348,7 @@ class Consign_tr extends PS_Controller
   {
     $sc = TRUE;
 
-    $data = json_decode($this->input->post('data'));
+    $data = json_decode($this->input->post('data') ?? '{}');
 
     if( ! empty($data))
     {
@@ -523,7 +504,6 @@ class Consign_tr extends PS_Controller
     ini_set('memory_limit','1000M');
 
     $sc = TRUE;
-
     $code = $this->input->post('order_code');
 
     if( ! empty($code))
@@ -534,12 +514,7 @@ class Consign_tr extends PS_Controller
       {
         if($doc->state < 3 && $doc->status != 2)
         {
-          $uid = genUid();
-          $import = 0;
-          $success = 0;
-          $failed = 0;
-          $skip = 0;
-
+          $uid = genUid();          
           $file = isset( $_FILES['uploadFile'] ) ? $_FILES['uploadFile'] : FALSE;
         	$path = $this->config->item('upload_path').'WT/';
           $file	= 'uploadFile';
@@ -560,15 +535,12 @@ class Consign_tr extends PS_Controller
             $this->error = $this->upload->display_errors();
       		}
           else
-          {
-            $this->load->library('excel');
-            $info = $this->upload->data();
-            /// read file
-      			$excel = PHPExcel_IOFactory::load($info['full_path']);
-      			//get only the Cell Collection
-            $cs	= $excel->getActiveSheet()->toArray(NULL, TRUE, TRUE, TRUE);
+          {            
+            $info = $this->upload->data();          
+      			$excel = IOFactory::load($info['full_path']);      		
+            $cs	= $excel->getActiveSheet()->toArray('', TRUE, TRUE, TRUE);
 
-            $count = count($cs);
+            $count = count($cs ?? []);
             $limit = intval(getConfig('IMPORT_ROWS_LIMIT')) + 1;
 
             if($count > $limit)
@@ -620,7 +592,7 @@ class Consign_tr extends PS_Controller
                 else
                 {
                   $gp = str_replace('%', '', $doc->gp);
-                  $gp = trim($gp);
+                  $gp = trim($gp ?? '');
 
                   if($sc === TRUE && ! empty($rs['A']) && ! empty($rs['D']))
                   {

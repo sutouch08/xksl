@@ -35,7 +35,6 @@ class Wrx_shopee_api
     $api_path = $url;
 
     $headers = array("Authorization:Bearer {$this->api['WRX_API_CREDENTIAL']}");
-    $apiUrl = str_replace(" ","%20",$url);
     $method = 'GET';
 
     $curl = curl_init();
@@ -45,8 +44,7 @@ class Wrx_shopee_api
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
-    $response = curl_exec($curl);
-    curl_close($curl);
+    $response = curl_exec($curl);   
     $res = json_decode($response);
 
     if( ! empty($res) && ! empty($res->code))
@@ -78,7 +76,6 @@ class Wrx_shopee_api
     $api_path = $url;
 
     $headers = array("Authorization:Bearer {$this->api['WRX_API_CREDENTIAL']}");
-    $apiUrl = str_replace(" ","%20",$url);
     $method = 'GET';
 
     $curl = curl_init();
@@ -88,8 +85,7 @@ class Wrx_shopee_api
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
-    $response = curl_exec($curl);
-    curl_close($curl);
+    $response = curl_exec($curl);    
     $res = json_decode($response);
 
     if( ! empty($res))

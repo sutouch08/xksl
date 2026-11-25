@@ -138,17 +138,17 @@ class Discount_rule extends PS_Controller
     $sc = TRUE;
 
     $id_rule  = $this->input->post('id_rule');
-    $setPrice = trim($this->input->post('set_price'));
+    $setPrice = trim($this->input->post('set_price') ?? '');
     $price    = $this->input->post('price');
-    $disc     = trim($this->input->post('disc'));
+    $disc     = trim($this->input->post('disc') ?? '');
     $unit     = $this->input->post('disc_unit');
-    $disc2    = trim($this->input->post('disc2'));
+    $disc2    = trim($this->input->post('disc2') ?? '');
     $unit2    = $this->input->post('disc_unit2');
-    $disc3    = trim($this->input->post('disc3'));
+    $disc3    = trim($this->input->post('disc3') ?? '');
     $unit3    = $this->input->post('disc_unit3');
     $minQty   = $this->input->post('min_qty');
     $minAmount = $this->input->post('min_amount');
-    $canGroup = trim($this->input->post('can_group'));
+    $canGroup = trim($this->input->post('can_group') ?? '');
 
     $minQty = $minQty > 0 ? $minQty : 0; //-- ต้องไม่ติดลบ
     $minAmount = $minAmount > 0 ? $minAmount : 0; //--- ต้องไม่ติดลบ
@@ -520,12 +520,9 @@ class Discount_rule extends PS_Controller
   }
 
 
-
-
   public function clear_filter()
   {
     $filter = array('rule_code', 'policy', 'rule_status', 'policy_status','rule_disc');  
     clear_filter($filter);
   }
-} //--- end class
-?>
+} 

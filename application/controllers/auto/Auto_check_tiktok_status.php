@@ -157,5 +157,4 @@ class Auto_check_tiktok_status extends CI_Controller
     echo $sc === TRUE ? 'success' : $this->error;
 	}
 
-} //--- end class
- ?>
+}

@@ -37,7 +37,7 @@ class Stock extends REST_Controller
   {
     if(!empty($code))
     {
-      $code = trim($code);
+      $code = trim($code ?? '');
 			$sell_stock = $this->stock_model->get_sell_stock($code);
 			$reserv_stock = $this->orders_model->get_reserv_stock($code);
 			$availableStock = $sell_stock - $reserv_stock;
@@ -72,7 +72,7 @@ class Stock extends REST_Controller
 		//--- Get raw post data
 		$json = file_get_contents("php://input");
 
-    $data = json_decode($json);
+    $data = json_decode($json ?? '{}');
 
     if(empty($data))
     {
@@ -154,7 +154,7 @@ class Stock extends REST_Controller
 		//--- Get raw post data
 		$json = file_get_contents("php://input");
 
-    $data = json_decode($json);
+    $data = json_decode($json ?? '{}');
 
     if(empty($data))
     {
@@ -230,8 +230,5 @@ class Stock extends REST_Controller
 
       $this->response($ds, 400);
     }
-
   }
-
-
-}// End Class
+}

@@ -1,21 +1,24 @@
 <?php
 function _check_login()
 {
-  $CI =& get_instance();
+  $ci =& get_instance();
   $uid = get_cookie('uid');
-  if($uid === NULL OR $CI->user_model->verify_uid($uid) === FALSE)
+
+  if($uid === NULL OR $ci->user_model->verify_uid($uid) === FALSE)
   {
     redirect(base_url().'users/authentication');
+    exit;
   }
 }
 
 
-function get_permission($menu, $uid = NULL, $id_profile = NULL)
+function get_permission($menu, $uid = NULL)
 {
-  $CI =& get_instance();
+  $ci =& get_instance();
 
-  $uid = $uid === NULL ? get_cookie('uid') : $uid;
-  $user = $CI->user_model->get_user_by_uid($uid);
+  $uid = empty($uid) ? get_cookie('uid') : $uid;
+  $user = $ci->user_model->get_user_by_uid($uid);
+  
   if(empty($user))
   {
     return reject_permission();
@@ -33,7 +36,8 @@ function get_permission($menu, $uid = NULL, $id_profile = NULL)
   }
   else
   {
-    $pm = $CI->user_model->get_permission($menu, $uid, $user->id_profile);
+    $pm = $ci->user_model->get_permission($menu, $uid, $user->id_profile);
+    
     if(empty($pm))
     {
       return reject_permission();
@@ -71,9 +75,8 @@ function _can_view_page($can_view)
 {
   if( ! $can_view)
   {
-    $CI =& get_instance();
-    $CI->load->view('deny_page');
-    //redirect('deny_page');
+    $ci =& get_instance();
+    $ci->load->view('deny_page');    
   }
 }
 
@@ -82,20 +85,18 @@ function profile_name_in($text)
 {
   if($text !== '')
   {
-    $CI =& get_instance();
-    $CI->db->select('id');
+    $ci =& get_instance();
+    $ci->db->select('id');
   }
 }
-
-
 
 
 function user_in($txt)
 {
   $sc = array('0');
-  $CI =& get_instance();
-  $CI->load->model('users/user_model');
-  $users = $CI->user_model->search($txt);
+  $ci =& get_instance();
+  $ci->load->model('users/user_model');
+  $users = $ci->user_model->search($txt);
 
   if(!empty($users))
   {
@@ -108,8 +109,7 @@ function user_in($txt)
   return $sc;
 }
 
-
-function select_user_id($user_id = NULL)
+function select_user_id($user_id = '')
 {
   $sc = "";
   $ci =& get_instance();
@@ -126,7 +126,7 @@ function select_user_id($user_id = NULL)
   return $sc;
 }
 
-function select_uname($uname = NULL)
+function select_uname($uname = '')
 {
   $sc = "";
   $ci =& get_instance();
@@ -161,14 +161,10 @@ function select_user($uname = NULL)
 	return $ds;
 }
 
-
 function display_name($uname)
 {
   $ci =& get_instance();
   $ci->load->model('users/user_model');
   $name = $ci->user_model->get_name($uname);
-
   return $name;
 }
-
- ?>

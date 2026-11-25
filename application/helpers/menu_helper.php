@@ -30,5 +30,3 @@ function side_menu($menu_code, $code, $url, $name)
 
   return $menu;
 }
-
- ?>

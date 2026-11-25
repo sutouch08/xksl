@@ -47,9 +47,7 @@ class Current_stock extends PS_Controller
     ini_set('sqlsrv.ClientBufferMaxKBSize','524288'); // Setting to 512M
     ini_set('pdo_sqlsrv.client_buffer_max_kb_size','524288'); // Setting to 512M - for pdo_sqlsrv
     ini_set('max_execution_time', 600);
-    $show_stock = TRUE;
-
-    //--- จำนวนคงเหลือ มูลค่าคงเหลือ
+       //--- จำนวนคงเหลือ มูลค่าคงเหลือ
     $stock = $this->current_stock_report_model->get_stock_summary();
 
     $sumQty = !empty($stock) ? $stock->qty : 0;
@@ -241,13 +239,4 @@ class Current_stock extends PS_Controller
     }
   }
 
-} //--- end class
-
-
-
-
-
-
-
-
- ?>
+}

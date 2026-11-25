@@ -541,6 +541,4 @@ class WT extends REST_Controller
       $this->response($arr, 200);
     }
   }
-
-} //--- end class
-?>
+} 

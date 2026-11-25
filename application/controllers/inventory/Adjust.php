@@ -7,9 +7,7 @@ class Adjust extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = '';
 	public $title = 'ปรับปรุงสต็อก';
-  public $filter;
-  public $error;
-
+  
   public function __construct()
   {
     parent::__construct();
@@ -78,10 +76,10 @@ class Adjust extends PS_Controller
         $ds = array(
           'code' => $code,
           'bookcode' => getConfig('BOOK_CODE_ADJUST'),
-          'reference' => get_null(trim($this->input->post('reference'))),
-          'date_add' => $date_add,
+          'reference' => get_null(trim($this->input->post('reference') ?? '')),
+          'date_add' => $date_add ?? '',
           'user' => get_cookie('uname'),
-          'remark' => get_null(trim($this->input->post('remark')))
+          'remark' => get_null(trim($this->input->post('remark') ?? ''))
         );
 
         if(! $this->adjust_model->add($ds))
@@ -846,7 +844,7 @@ class Adjust extends PS_Controller
                 'issue_code' => NULL,
                 'receive_code' => NULL,
                 'status' => 2,
-                'cancle_reason' => trim($this->input->post('reason')),
+                'cancle_reason' => trim($this->input->post('reason') ?? ''),
                 'cancle_user' => $this->_user->uname
               );
 
@@ -1005,13 +1003,13 @@ class Adjust extends PS_Controller
       if(! $this->export->export_adjust_goods_issue($code))
       {
         $sc = FALSE;
-        $this->error = trim($this->export->error);
+        $this->error = trim($this->export->error ?? '');
       }
 
       if(! $this->export->export_adjust_goods_receive($code))
       {
         $sc = FALSE;
-        $this->error = trim($this->export->error);
+        $this->error = trim($this->export->error ?? '');
       }      
     }
     else

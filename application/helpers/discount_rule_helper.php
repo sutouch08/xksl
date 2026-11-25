@@ -3,9 +3,9 @@
 function discount_rule_in($txt)
 {
   $sc = "0";
-  $CI =& get_instance();
-  $CI->load->model('discount/discount_rule_model');
-  $rs = $CI->discount_rule_model->search($txt);
+  $ci =& get_instance();
+  $ci->load->model('discount/discount_rule_model');
+  $rs = $ci->discount_rule_model->search($txt);
 
   if(!empty($rs))
   {
@@ -61,4 +61,3 @@ function parse_discount_to_label(array $ds = array())
 
 	return $disc;
 }
-?>

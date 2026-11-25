@@ -48,9 +48,7 @@ class Permission extends PS_Controller{
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 
 		$result = $this->profile_model->get_list($filter, $perpage, $this->uri->segment($segment));
-
-    $data = array();
-
+   
     if(!empty($result))
     {
       foreach($result as $rs)
@@ -76,6 +74,7 @@ class Permission extends PS_Controller{
     $data['data'] = $profile;
     $data['menus'] = array();
     $groups = $this->menu->get_menu_groups();
+
     if(!empty($groups))
     {
       foreach($groups as $group)
@@ -102,6 +101,7 @@ class Permission extends PS_Controller{
 									'menu_name' => $menu->name,
 									'permission' => $this->permission_model->get_permission($menu->code, $id)
 								);
+
 								array_push($item, $arr);
 							}
 
@@ -162,16 +162,10 @@ class Permission extends PS_Controller{
 	}
 
 
-
-
-
-
   public function clear_filter()
   {
 		$filter = array('profileName', 'menux', 'permission');
     clear_filter($filter);
     echo 'done';
   }
-
-} //-- end class
-  ?>
+}

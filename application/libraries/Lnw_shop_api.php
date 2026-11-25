@@ -71,15 +71,14 @@ class Lnw_shop_api
 
         $response = curl_exec($ch);
         $error = curl_error($ch);
-        curl_close($ch);
-
+       
         if (! empty($error))
         {
           $sc = FALSE;
           $this->error = $error;
         }
 
-        $res = json_decode($response);
+        $res = json_decode($response ?? '{}');
 
         if (! empty($res) && ! empty($res->status))
         {
@@ -92,7 +91,7 @@ class Lnw_shop_api
             
             $sc = FALSE;
             $request_status = 2;
-            $this->error = 'Partial success: ' . count($error_products) . ' products failed to update stock';
+            $this->error = 'Partial success: ' . count($error_products ?? []) . ' products failed to update stock';
           }
 
           if($res->status == 'error')
@@ -205,7 +204,7 @@ class Lnw_shop_api
         "Content-Type:application/json"
       );
 
-      $json = json_encode($req);
+      $json = json_encode($req ?? '{}');
 
       if (! $this->test)
       {
@@ -218,8 +217,7 @@ class Lnw_shop_api
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $response = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
+        $error = curl_error($ch);        
 
         if (! empty($error))
         {
@@ -227,7 +225,7 @@ class Lnw_shop_api
           $this->error = $error;
         }
 
-        $res = json_decode($response);
+        $res = json_decode($response ?? '{}');
 
         if (! empty($res) && ! empty($res->status))
         {
@@ -240,7 +238,7 @@ class Lnw_shop_api
 
             $sc = FALSE;
             $request_status = 2;
-            $this->error = 'Partial success: ' . count($error_products) . ' products failed to update stock';
+            $this->error = 'Partial success: ' . count($error_products ?? []) . ' products failed to update stock';
           }
 
           if ($res->status == 'error')

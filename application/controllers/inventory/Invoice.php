@@ -7,7 +7,7 @@ class Invoice extends PS_Controller
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'PICKPACK';
 	public $title = 'รายการเปิดบิลแล้ว';
-  public $filter;
+  
   public function __construct()
   {
     parent::__construct();

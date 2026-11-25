@@ -5,9 +5,7 @@ class Return_lend extends PS_Controller
   public $menu_code = 'ICRTLD';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'RETURN';
-	public $title = 'คืนสินค้าจากการยืม';
-  public $filter;
-  public $error;
+	public $title = 'คืนสินค้าจากการยืม'; 
   public $required_remark = 1;
 
   public function __construct()
@@ -748,7 +746,7 @@ class Return_lend extends PS_Controller
     if(! $this->export->export_return_lend($code))
     {
       $sc = FALSE;
-      $this->error = trim($this->export->error);
+      $this->error = ($this->export->error);
     }
 
     return $sc;

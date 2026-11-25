@@ -4,145 +4,141 @@ class Purchase_grid
   public function __construct()
   {
     // Assign the CodeIgniter super-object
-    $this->ci =& get_instance();
+    $this->ci = &get_instance();
     $this->ci->load->model('masters/products_model');
     $this->ci->load->model('masters/product_style_model');
   }
 
 
   public function getProductGrid($style_code)
-	{
-		$sc = '';
+  {
+    $sc = '';
 
     $style = $this->ci->product_style_model->get($style_code);
 
-    if(!empty($style))
+    if (!empty($style))
     {
       $attrs = $this->getAttribute($style->code);
 
-      if( count($attrs) == 1  )
+      if (count($attrs ?? []) == 1)
       {
         $sc .= $this->orderGridOneAttribute($style, $attrs[0]);
       }
-      else if( count( $attrs ) == 2 )
+      else if (count($attrs ?? []) == 2)
       {
         $sc .= $this->orderGridTwoAttribute($style);
       }
-
     }
     else
     {
       $sc = 'notfound';
     }
 
-		return $sc;
-	}
-
-
+    return $sc;
+  }
 
 
   public function orderGridOneAttribute($style, $attr)
-	{
-		$sc 		= '';
-		$data 	= $attr == 'color' ? $this->getAllColors($style->code) : $this->getAllSizes($style->code);
-		$items	= $this->ci->products_model->get_style_items($style->code);
+  {
+    $sc     = '';
+    $data   = $attr == 'color' ? $this->getAllColors($style->code) : $this->getAllSizes($style->code);
+    $items  = $this->ci->products_model->get_style_items($style->code);
 
-		$i = 0;
+    $i = 0;
     $r = 0; //--- row number
     $c = 0; //--- column number
 
-    foreach($items as $item )
+    foreach ($items as $item)
     {
-      $id_attr	= $item->size_code === NULL OR $item->size_code === '' ? $item->color_code : $item->size_code;
-      $sc 	.= $i%2 == 0 ? '<tr>' : '';
+      $id_attr  = $item->size_code === NULL or $item->size_code === '' ? $item->color_code : $item->size_code;
+      $sc   .= $i % 2 == 0 ? '<tr>' : '';
 
       $code = $attr == 'color' ? $item->color_code : $item->size_code;
 
-			$sc .= '<td class="middle" style="border-right:0px;">';
-			$sc .= '<strong>' .	$code.' ('.$data[$code].')' . '</strong>';
-			$sc .= '</td>';
-			$sc .= '<td class="middle" class="one-attribute">';
+      $sc .= '<td class="middle" style="border-right:0px;">';
+      $sc .= '<strong>' .  $code . ' (' . $data[$code] . ')' . '</strong>';
+      $sc .= '</td>';
+      $sc .= '<td class="middle" class="one-attribute">';
       $sc .= '<input type="number" min="0" ';
-      $sc .= 'class="form-control text-center item-grid r-'.$r.' c-'.$c.'" ';
-      $sc .= 'name="qty[0]['.$item->code.']" ';
-      $sc .= 'id="qty-'.$r.$c.'" ';
-      $sc .= 'data-code="'.$item->code.'" ';
-      $sc .= 'data-name="'.$item->name.'" ';
-      $sc .= 'data-cost="'.$item->cost.'" ';
-      $sc .= 'data-price="'.$item->price.'" ';
-      $sc .= 'data-row="'.$r.'" data-col="'.$c.'" ';
+      $sc .= 'class="form-control text-center item-grid r-' . $r . ' c-' . $c . '" ';
+      $sc .= 'name="qty[0][' . $item->code . ']" ';
+      $sc .= 'id="qty-' . $r . $c . '" ';
+      $sc .= 'data-code="' . $item->code . '" ';
+      $sc .= 'data-name="' . $item->name . '" ';
+      $sc .= 'data-cost="' . $item->cost . '" ';
+      $sc .= 'data-price="' . $item->price . '" ';
+      $sc .= 'data-row="' . $r . '" data-col="' . $c . '" ';
       $sc .= 'data-limit="-1"/>';
-			$sc .= '</td>';
+      $sc .= '</td>';
 
-			$i++;
+      $i++;
 
-			$sc 	.= $i%2 == 0 ? '</tr>' : '';
+      $sc   .= $i % 2 == 0 ? '</tr>' : '';
       $r++;
     }
 
-		return $sc;
-	}
-
+    return $sc;
+  }
 
 
   public function orderGridTwoAttribute($style)
-	{
-		$colors	= $this->getAllColors($style->code);
-		$sizes 	= $this->getAllSizes($style->code);
-		$sc = '';
-		$sc .= $this->gridHeader($colors);
+  {
+    $colors  = $this->getAllColors($style->code);
+    $sizes   = $this->getAllSizes($style->code);
+    $sc = '';
+    $sc .= $this->gridHeader($colors);
 
     $r = 0; //-- row number
 
-		foreach( $sizes as $size_code => $size )
-		{
+    foreach ($sizes as $size_code => $size)
+    {
       $c = 0; //-- column number
 
       $bg_color = '';
-			$sc 	.= '<tr style="font-size:12px; '.$bg_color.'">';
-			$sc 	.= '<td class="text-center middle r"><strong>'.$size_code.'</strong></td>';
+      $sc   .= '<tr style="font-size:12px; ' . $bg_color . '">';
+      $sc   .= '<td class="text-center middle r"><strong>' . $size_code . '</strong></td>';
 
-			foreach( $colors as $color_code => $color )
-			{
+      foreach ($colors as $color_code => $color)
+      {
         $item = $this->ci->products_model->get_item_by_color_and_size($style->code, $color_code, $size_code);
 
-				if( ! empty($item) )
-				{
-					$sc .= '<td class="order-grid">';
+        if (! empty($item))
+        {
+          $sc .= '<td class="order-grid">';
           $sc .= '<input type="number" min="0" ';
-          $sc .= 'class="form-control text-center item-grid r-'.$r.' c-'.$c.'" ';
-          $sc .= 'name="qty['.$item->color_code.']['.$item->code.']" ';
-          $sc .= 'id="qty-'.$r.$c.'" ';
-          $sc .= 'data-code="'.$item->code.'" ';
-          $sc .= 'data-name="'.$item->name.'" ';
-          $sc .= 'data-cost="'.$item->cost.'" ';
-          $sc .= 'data-price="'.$item->price.'" ';          
+          $sc .= 'class="form-control text-center item-grid r-' . $r . ' c-' . $c . '" ';
+          $sc .= 'name="qty[' . $item->color_code . '][' . $item->code . ']" ';
+          $sc .= 'id="qty-' . $r . $c . '" ';
+          $sc .= 'data-code="' . $item->code . '" ';
+          $sc .= 'data-name="' . $item->name . '" ';
+          $sc .= 'data-cost="' . $item->cost . '" ';
+          $sc .= 'data-price="' . $item->price . '" ';
           $sc .= 'data-limit="-1" ';
-          $sc .= 'data-row="'.$r.'" data-col="'.$c.'" ';
-          $sc .= 'placeholder="'.$color_code.'-'.$size_code.'" />';
-					$sc .= '</td>';
-				}
-				else
-				{
+          $sc .= 'data-row="' . $r . '" data-col="' . $c . '" ';
+          $sc .= 'placeholder="' . $color_code . '-' . $size_code . '" />';
+          $sc .= '</td>';
+        }
+        else
+        {
           $sc .= '<td class="order-grid">';
           $sc .= '<input type="text" min="0" ';
-          $sc .= 'class="form-control text-center item-grid r-'.$r.' c-'.$c.'" ';
-          $sc .= 'id="qty-'.$r.$c.'" ';
-          $sc .= 'data-row="'.$r.'" data-col="'.$c.'" ';
-          $sc .= 'placeholder="'.$color_code.'-'.$size_code.'" value="N/A" readonly />';
-					$sc .= '</td>';
-				}
+          $sc .= 'class="form-control text-center item-grid r-' . $r . ' c-' . $c . '" ';
+          $sc .= 'id="qty-' . $r . $c . '" ';
+          $sc .= 'data-row="' . $r . '" data-col="' . $c . '" ';
+          $sc .= 'placeholder="' . $color_code . '-' . $size_code . '" value="N/A" readonly />';
+          $sc .= '</td>';
+        }
 
         $c++;
-			} //--- End foreach $colors
+      } //--- End foreach $colors
 
-			$sc .= '</tr>';
+      $sc .= '</tr>';
 
       $r++;
-		} //--- end foreach $sizes
+    } //--- end foreach $sizes
 
     return $sc;
-	}
+  }
 
 
   public function getAttribute($style_code)
@@ -150,12 +146,12 @@ class Purchase_grid
     $sc = array();
     $color = $this->ci->products_model->count_color($style_code);
     $size  = $this->ci->products_model->count_size($style_code);
-    if( $color > 0 )
+    if ($color > 0)
     {
       $sc[] = "color";
     }
 
-    if( $size > 0 )
+    if ($size > 0)
     {
       $sc[] = "size";
     }
@@ -163,13 +159,12 @@ class Purchase_grid
   }
 
 
-
   public function gridHeader(array $colors)
   {
     $sc = '<tr class="font-size-12"><td style="width:80px;">&nbsp;</td>';
-    foreach( $colors as $code => $name )
+    foreach ($colors as $code => $name)
     {
-      $sc .= '<td class="text-center middle c" style="width:80px; white-space:normal;">'.$code . '<br/>'. $name.'</td>';
+      $sc .= '<td class="text-center middle c" style="width:80px; white-space:normal;">' . $code . '<br/>' . $name . '</td>';
     }
     $sc .= '</tr>';
     return $sc;
@@ -177,34 +172,34 @@ class Purchase_grid
 
 
   public function getAllColors($style_code)
-	{
-		$sc = array();
+  {
+    $sc = array();
     $colors = $this->ci->products_model->get_all_colors($style_code);
-    if($colors !== FALSE)
+    if ($colors !== FALSE)
     {
-      foreach($colors as $color)
+      foreach ($colors as $color)
       {
         $sc[$color->code] = $color->name;
       }
     }
 
     return $sc;
-	}
+  }
 
 
   public function getAllSizes($style_code)
-	{
-		$sc = array();
-		$sizes = $this->ci->products_model->get_all_sizes($style_code);
-		if( $sizes !== FALSE )
-		{
-      foreach($sizes as $size)
+  {
+    $sc = array();
+    $sizes = $this->ci->products_model->get_all_sizes($style_code);
+    if ($sizes !== FALSE)
+    {
+      foreach ($sizes as $size)
       {
         $sc[$size->code] = $size->name;
       }
-		}
-		return $sc;
-	}
+    }
+    return $sc;
+  }
 
 
   public function getSizeColor($size_code)
@@ -221,7 +216,7 @@ class Purchase_grid
       '7L' => '#ABA9DF'
     );
 
-    if(isset($colors[$size_code]))
+    if (isset($colors[$size_code]))
     {
       return $colors[$size_code];
     }
@@ -237,7 +232,7 @@ class Purchase_grid
     $tdWidth = 80;  //----- แต่ละช่อง
     $padding = 80; //----- สำหรับช่องแสดงไซส์
     $color = $this->ci->products_model->count_color($style_code);
-    if($color > 0)
+    if ($color > 0)
     {
       $sc = $color * $tdWidth + $padding;
     }
@@ -245,5 +240,3 @@ class Purchase_grid
     return $sc;
   }
 }
-
- ?>

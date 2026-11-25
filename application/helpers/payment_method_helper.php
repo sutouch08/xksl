@@ -2,9 +2,10 @@
 function select_payment_method($code = '')
 {
   $sc = '';
-  $CI =& get_instance();
-  $CI->load->model('masters/payment_methods_model');
-  $payments = $CI->payment_methods_model->get_data();
+  $ci =& get_instance();
+  $ci->load->model('masters/payment_methods_model');
+  $payments = $ci->payment_methods_model->get_data();
+
   if(!empty($payments))
   {
     foreach($payments as $rs)
@@ -16,7 +17,7 @@ function select_payment_method($code = '')
   return $sc;
 }
 
-function select_payment_role($role = NULL)
+function select_payment_role($role = '')
 {
   $ds  = '<option value="1" '.is_selected('1', $role).'>เงินสด</option>';
   $ds .= '<option value="2" '.is_selected('2', $role).'>เงินโอน</option>';
@@ -56,7 +57,5 @@ function payment_role_name($role)
     '5' => 'เครดิตเทอม'
   );
 
-  return isset($ds[$role]) ? $ds[$role] : 'Unknow';
+  return isset($ds[$role ?? '']) ? $ds[$role] : 'Unknow';
 }
-
- ?>
